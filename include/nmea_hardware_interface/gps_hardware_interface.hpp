@@ -47,6 +47,8 @@ public:
   NMEA_HARDWARE_INTERFACE_PUBLIC
   hardware_interface::return_type configure(const hardware_interface::HardwareInfo & info) override;
 
+  ~configure();
+
   NMEA_HARDWARE_INTERFACE_PUBLIC
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
 
@@ -59,23 +61,38 @@ public:
   NMEA_HARDWARE_INTERFACE_PUBLIC
   hardware_interface::return_type read() override;
 
+  NMEA_HARDWARE_INTERFACE_PUBLIC
+  hardware_interface::return_type write() override;
+
 private:
-  std::string device_file_;
   std::string joint_;
-  int baud_rate_;
   std::string geopoint_key_;
+  nmea_msgs::msg::Sentence sentence;
+
   
+  
+  boost::thread togeopoint_thread_;
+  std::shared_ptr<Poco::SharedMemory> geopoint_memory_ptr_;
+
+  std::string device_file_;
+  int baud_rate_;
   std::string frame_id_;
   boost::asio::io_service io_;
   std::shared_ptr<boost::asio::serial_port> port_ptr_;
   boost::thread io_thread_;
-  boost::thread togeopoint_thread_;
-  std::shared_ptr<Poco::SharedMemory> geopoint_memory_ptr_;
   void readSentence();
+  boost::array<char, 256> buf_;
+  std::vector<std::string> split(std::string s, char delim);
+  void connectSerialPort();
+  bool connected_ = false;
+  void timerCallback();
+  rclcpp::TimerBase::SharedPtr timer_;
+  boost::optional<std::string> validate(std::string sentence);
+  bool validatecheckSum(std::string sentence);
+  std::string getHexString(uint8_t value);
+
   void nmeaSentenceCallback(const nmea_msgs::msg::Sentence::SharedPtr msg);
   std::string calculateChecksum(std::string sentence);
-  std::string getHexString(uint8_t value);
-  
   boost::optional<geographic_msgs::msg::GeoPoint> geopoint_;
   boost::optional<geometry_msgs::msg::Quaternion> quat_;
   bool isGprmcSentence(nmea_msgs::msg::Sentence sentence);
@@ -83,76 +100,8 @@ private:
   std::vector<std::string> split(const std::string & s, char delim);
   std::vector<std::string> splitChecksum(std::string str);
   boost::optional<std::vector<std::string>> splitSentence(nmea_msgs::msg::Sentence sentence);
-  boost::optional<rclcpp::Time> last_timestamp_;
 
-  template <typename T>
-  T getParameter(const std::string key, const hardware_interface::ComponentInfo & info) const
-  {
-    T param;
-    getParameter(key, info, param);
-    return param;
-  }
-  void getParameter(
-    const std::string & key, const hardware_interface::ComponentInfo & info,
-    std::string & parameter) const
-  {
-    try {
-      parameter = info.parameters.at(key);
-    } catch (std::out_of_range & e) {
-      RCLCPP_ERROR_STREAM(
-        rclcpp::get_logger("REALSENSE_hardware_interface"),
-        "parameter : " << key << " does not exist.");
-    }
-  }
-  void getParameter(
-    const std::string & key, const hardware_interface::ComponentInfo & info, int & parameter) const
-  {
-    std::string param_string;
-    getParameter(key, info, param_string);
-    parameter = std::stoi(param_string);
-  }
-  void getParameter(
-    const std::string & key, const hardware_interface::ComponentInfo & info, bool & parameter) const
-  {
-    parameter = false;
-    std::string param_string;
-    getParameter(key, info, param_string);
-    if (param_string == "true" || param_string == "True") {
-      parameter = true;
-    }
-  }
-  template <typename T>
-  T getHardwareParameter(const std::string key) const
-  {
-    T param;
-    getHardwareParameter(key, param);
-    return param;
-  }
-  void getHardwareParameter(const std::string & key, std::string & parameter) const
-  {
-    try {
-      parameter = info_.hardware_parameters.at(key);
-    } catch (std::out_of_range & e) {
-      RCLCPP_ERROR_STREAM(
-        rclcpp::get_logger("REALSENSE_hardware_interface"),
-        "hardware parameter : " << key << " does not exist.");
-    }
-  }
-  void getHardwareParameter(const std::string & key, int & parameter) const
-  {
-    std::string param_string;
-    getHardwareParameter(key, param_string);
-    parameter = std::stoi(param_string);
-  }
-  void getHardwareParameter(const std::string & key, bool & parameter) const
-  {
-    parameter = false;
-    std::string param_string;
-    getHardwareParameter(key, param_string);
-    if (param_string == "true" || param_string == "True") {
-      parameter = true;
-    }
-  }
+  
 };
 }  // namespace nmea_hardware_interface
 
