@@ -15,7 +15,7 @@
 #ifndef NMEA_HARDWARE_INTERFACE__GEOPOINT_PUBLISHER_HPP_
 #define NMEA_HARDWARE_INTERFACE__GEOPOINT_PUBLISHER_HPP_
 
-#include <Poco/SharedMemory.h>
+
 #include <realtime_tools/realtime_buffer.h>
 #include <realtime_tools/realtime_publisher.h>
 
@@ -27,7 +27,6 @@
 #include <rclcpp/subscription.hpp>
 #include <rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp>
 #include <rclcpp_lifecycle/state.hpp>
-#include <nmea_msgs/msg/sentence.hpp>
 #include <geographic_msg/msg/geopoint.hpp>
 #include <rclcpp/rclcpp.hpp>
 
@@ -41,10 +40,9 @@ namespace nmea_hardware_interface
 class GeoPointPublisher : public controller_interface::ControllerInterface
 {
 public:
-
   NMEA_HARDWARE_INTERFACE_PUBLIC
   controller_interface::return_type init(const std::string & controller_name) override;
-  
+
   NMEA_HARDWARE_INTERFACE_PUBLIC
   controller_interface::InterfaceConfiguration command_interface_configuration() const override
   {
@@ -100,7 +98,7 @@ private:
   double update_duration_;
   size_t size_;
   std::string geopoint_topic_;
-  
+
   std::string geopoint_key_;
   std::shared_ptr<rclcpp::Clock> clock_ptr_;
   std::shared_ptr<Poco::SharedMemory> geopoint_memory_ptr_;

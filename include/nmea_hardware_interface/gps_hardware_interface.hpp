@@ -15,8 +15,6 @@
 #ifndef NMEA_HARDWARE_INTERFACE__GPS_HARDWARE_INTERFACE_HPP_
 #define NMEA_HARDWARE_INTERFACE__GPS_HARDWARE_INTERFACE_HPP_
 
-#include <Poco/SharedMemory.h>
-
 #include <hardware_interface/base_interface.hpp>
 #include <hardware_interface/handle.hpp>
 #include <hardware_interface/hardware_info.hpp>
@@ -39,7 +37,7 @@
 namespace nmea_hardware_interface
 {
 class GPSHardwareInterface
-: public hardware_interface::BaseInterface<hardware_interface::SensorInterface>
+  : public hardware_interface::BaseInterface<hardware_interface::SensorInterface>
 {
 public:
   RCLCPP_SHARED_PTR_DEFINITIONS(GPSHardwareInterface)
@@ -69,8 +67,8 @@ private:
   std::string geopoint_key_;
   nmea_msgs::msg::Sentence sentence;
   size_t size_;
-  
-  
+
+
   boost::thread togeopoint_thread_;
   std::shared_ptr<Poco::SharedMemory> geopoint_memory_ptr_;
 
@@ -100,8 +98,6 @@ private:
   std::vector<std::string> split(const std::string & s, char delim);
   std::vector<std::string> splitChecksum(std::string str);
   boost::optional<std::vector<std::string>> splitSentence(nmea_msgs::msg::Sentence sentence);
-
-  
 };
 }  // namespace nmea_hardware_interface
 

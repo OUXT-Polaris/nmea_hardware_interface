@@ -11,25 +11,89 @@ if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14)
 endif()
 
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
+if($ENV{ROS_DISTRO} STREQUAL "galactic")
+  add_definitions(-DGALACTIC)
 endif()
 
 # find dependencies
 
 find_package(ament_cmake REQUIRED)
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rclcpp_components REQUIRED)
+find_package(ros2_control REQUIRED)
+find_package(pluginlib REQUIRED)
+find_package(realtime_tools REQUIRED)
+find_package(hardware_interface REQUIRED)
+find_package(controller_interface REQUIRED)
+find_package(geographic_msgs REQUIRED)
+find_package(nmea_msgs REQUIRED)
+find_package(Boost REQUIRED COMPONENTS system thread)
+
+add_library(nmea_hardware_interface SHARED
+  src/nmea_hardware_interface.cpp
+)
+
+target_include_directories(
+  nmea_hardware_interface
+  PRIVATE
+  include
+  ${Boost_INCLUDE_DIRS}
+)
+
+
+
+ament_target_dependencies(nmea_hardware_interface
+  hardware_interface
+  pluginlib
+  rclcpp
+  ros2_control
+  realtime_tools
+  geographic_msgs
+  nmea_msgs
+)
+pluginlib_export_plugin_description_file(hardware_interface nmea_hardware_interface.xml)
+
+add_library(nmea_controller_interface SHARED
+  src/geopoint_publisher.cpp
+)
+
+ament_target_dependencies(nmea_controller_interface
+  controller_interface
+  hardware_interface
+  pluginlib
+  rclcpp
+  ros2_control
+  realtime_tools
+  geographic_msgs
+)
+pluginlib_export_plugin_description_file(controller_interface nmea_controller_interface.xml)
+
+ament_export_libraries(
+  nmea_hardware_interface nmea_controller_interface
+)
+ament_export_dependencies(
+  hardware_interface
+  pluginlib
+  rclcpp
+  ros2_control
+  realtime_tools
+  geographic_msgs
+  nmea_msgs
+)
+
+install(
+  TARGETS nmea_hardware_interface nmea_controller_interface
+  DESTINATION lib
+)
+
+install(DIRECTORY config launch urdf
+  DESTINATION share/${PROJECT_NAME}
+)
+
+
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
-  # the following line skips the linter which checks for copyrights
-  # uncomment the line when a copyright and license is not present in all source files
-  #set(ament_cmake_copyright_FOUND TRUE)
-  # the following line skips cpplint (only works in a git repo)
-  # uncomment the line when this package is not in a git repo
-  #set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
 endif()
 

@@ -13,6 +13,10 @@
 // limitations under the License.
 
 #include <nmea_hardware_interface/geopoint_publisher.hpp>
+#include <memory>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 namespace nmea_hardware_interface
 {
@@ -28,16 +32,14 @@ controller_interface::return_type GeoPointPublisher::init(const std::string & co
   optical_frame_ = node->get_parameter("optical_frame").as_string();
   node->declare_parameter("geopoint_topic", "");
   geopoint_topic_ = node->get_parameter("geopoint_topic").as_string();
-  
-  node->declare_parameter("geopoint_memory_key", "");
-  geopoint_memory_key_ = node->get_parameter("geopoint_memory_key").as_string();
+
   node->declare_parameter("publish_rate", 30.0);
   publish_rate_ = node->get_parameter("publish_rate").as_double();
   update_duration_ = 1.0 / publish_rate_;
   std::string qos;
   node->declare_parameter("qos", "sensor");
   qos_ = node->get_parameter("qos").as_string();
-  
+  geopoint_memory_ptr_ = std::make_shared<geographic_msgs::msg::GeoPoint>(geopoint_);
   return controller_interface::return_type::OK;
 }
 
@@ -48,19 +50,23 @@ GeoPointPublisher::on_configure(const rclcpp_lifecycle::State & /*previous_state
   configure_time_ = node->get_clock()->now().seconds();
   next_update_time_ = configure_time_ + update_duration_;
   size_ = 10;
-  geopoint_memory_ptr_ = std::make_shared<Poco::SharedMemory>(
-    geopoint_key_, size_, Poco::SharedMemory::AccessMode::AM_WRITE);
+
   if (qos_ == "sensor") {
     geopoint_pub_ =
-      node->create_publisher<geographic_msg::msg::GeoPoint>(geopoint_topic_, rclcpp::SensorDataQoS());
+      node->create_publisher<geographic_msg::msg::GeoPoint>(
+      geopoint_topic_,
+      rclcpp::SensorDataQoS());
   } else if (qos_ == "system_default") {
     geopoint_pub_ =
-      node->create_publisher<geographic_msg::msg::GeoPoint>(geopoint_topic_, rclcpp::SystemDefaultsQoS());
+      node->create_publisher<geographic_msg::msg::GeoPoint>(
+      geopoint_topic_,
+      rclcpp::SystemDefaultsQoS());
   } else {
     throw std::runtime_error("invalid qos setting : " + qos_);
   }
   geopoint_pub_realtime_ =
-    std::make_shared<realtime_tools::RealtimePublisher<sensor_msgs::msg::Image>>(geopoint_pub_);
+    std::make_shared<realtime_tools::RealtimePublisher<
+        geographic_msg::msg::GeoPoint>>(geopoint_pub_);
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
@@ -69,7 +75,7 @@ void GeoPointPublisher::publishGeopoint()
 {
   auto node = get_node();
   const auto now = node->get_clock()->now();
-  
+
   std_msgs::msg::Header header;
   header.frame_id = optical_frame_;
 #if GALACTIC

@@ -15,6 +15,7 @@
 #include <chrono>
 #include <memory>
 #include <nmea_hardware_interface/gps_hardware_interface.hpp>
+
 #include <sstream>
 #include <string>
 #include <vector>
@@ -34,7 +35,6 @@ hardware_interface::return_type GPSHardwareInterface::configure(
   connectSerialPort();
   using namespace std::chrono_literals;
   timer_ = create_wall_timer(1000ms, std::bind(&GPSHardwareInterface::timerCallback, this));
- 
   if (configure_default(info) != hardware_interface::return_type::OK)
   {
     return hardware_interface::return_type::ERROR;
@@ -55,19 +55,18 @@ GPSHardwareInterface::~configure() { io_thread_.join(); }
 
 std::vector<hardware_interface::StateInterface> GPSHardwareInterface::export_state_interfaces()
 {
-  std::vector<hardware_interface::StateInterface> state_interfaces;
-  
+  std::vector<hardware_interface::StateInterface> state_interfaces = {};
+  geopoint_memory_ptr_  = std::make_shared<geographic_msgs::msg::GeoPoint>(geopoint_);
+  geopoint_memory_ptr_->appendStateInterface(state_interfaces);
+
   return state_interfaces;
 }
 
 hardware_interface::return_type GPSHardwareInterface::start()
 {
   status_ = hardware_interface::status::STARTED;
-  size_=10;
-  geopoint_memory_ptr_ = std::make_shared<Poco::SharedMemory>(
-      geopoint_key_, size_, Poco::SharedMemory::AccessMode::AM_WRITE);
- 
-  togeopoint_thread_ = boost::thread(boost::bind(&GPSHardwareInterface::nmeaSentenceCallback, this, sentense));
+  togeopoint_thread_ = boost::thread(
+    boost::bind(&GPSHardwareInterface::nmeaSentenceCallback, this, sentense));
   return hardware_interface::return_type::OK;
 }
 
@@ -81,6 +80,7 @@ hardware_interface::return_type GPSHardwareInterface::stop()
 
 hardware_interface::return_type GPSHardwareInterface::read()
 {
+  geopoint_memory_ptr_ ->setValue(geopoint_);
   return hardware_interface::return_type::OK;
 }
 
@@ -219,7 +219,6 @@ void GPSHardwareInterface::readSentence()
       }
     }
   }
-
 }
 
 void GPSHardwareInterface::nmeaSentenceCallback(nmea_msgs::msg::Sentence msg)
@@ -243,14 +242,10 @@ void GPSHardwareInterface::nmeaSentenceCallback(nmea_msgs::msg::Sentence msg)
       if (east_or_west_str == "W") {
         longitude = longitude * -1;
       }
-      
       geopoint.latitude = latitude;
       geopoint.longitude = longitude;
       geopoint.altitude = 0.0;
       geopoint_ = geopoint;
-      size_ = sizeof(geopoint);
-      memcpy(geopoint_memory_ptr_->begin(), geopoint_, size_);
-    }
   }
 }
 
@@ -289,9 +284,7 @@ std::string GPSHardwareInterface::calculateChecksum(std::string sentence)
   return ret;
 }
 
-
-}  // namespace nmea_hardware_interface
-
+}  // namespace nmea_hardware_interface 
 
 #include "pluginlib/class_list_macros.hpp"
 
