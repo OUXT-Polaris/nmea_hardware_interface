@@ -68,7 +68,7 @@ private:
   std::string joint_;
   std::string geopoint_key_;
   nmea_msgs::msg::Sentence sentence;
-
+  size_t size_;
   
   
   boost::thread togeopoint_thread_;

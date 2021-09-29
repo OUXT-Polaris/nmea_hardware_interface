@@ -38,7 +38,7 @@
 
 namespace nmea_hardware_interface
 {
-class GeoPosePublisher : public controller_interface::ControllerInterface
+class GeoPointPublisher : public controller_interface::ControllerInterface
 {
 public:
 
@@ -85,22 +85,28 @@ public:
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
   }
 
+#if GALACTIC
+  DYNAMIXEL_HARDWARE_INTERFACE_PUBLIC
+  controller_interface::return_type update(
+    const rclcpp::Time & time, const rclcpp::Duration & period) override;
+#else
   NMEA_HARDWARE_INTERFACE_PUBLIC
   controller_interface::return_type update() override;
+#endif
 
 private:
   void publishGeopoint();
   double publish_rate_;
   double update_duration_;
-  std::string joint_;
-  std::string shared_memory_key_;
+  size_t size_;
+  std::string geopoint_topic_;
+  
+  std::string geopoint_key_;
   std::shared_ptr<rclcpp::Clock> clock_ptr_;
-  std::shared_ptr<Poco::SharedMemory> geopose_memory_ptr_;
+  std::shared_ptr<Poco::SharedMemory> geopoint_memory_ptr_;
   double configure_time_;
   double next_update_time_;
-  rclcpp::Publisher<geographic_msg::msg::geopoint>::SharedPtr geopoint_pub_;
-  
-
+  rclcpp::Publisher<geographic_msg::msg::GeoPoint>::SharedPtr geopoint_pub_;
 };
 }  // namespace nmea_hardware_interface
 

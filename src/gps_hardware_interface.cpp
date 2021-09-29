@@ -31,8 +31,6 @@ hardware_interface::return_type GPSHardwareInterface::configure(
   declare_parameter("frame_id", "gps");
   get_parameter("frame_id", frame_id_);
 
-  
-
   connectSerialPort();
   using namespace std::chrono_literals;
   timer_ = create_wall_timer(1000ms, std::bind(&GPSHardwareInterface::timerCallback, this));
@@ -65,8 +63,9 @@ std::vector<hardware_interface::StateInterface> GPSHardwareInterface::export_sta
 hardware_interface::return_type GPSHardwareInterface::start()
 {
   status_ = hardware_interface::status::STARTED;
+  size_=10;
   geopoint_memory_ptr_ = std::make_shared<Poco::SharedMemory>(
-      geopoint_key_, sizeof("gps_geopoint"), Poco::SharedMemory::AccessMode::AM_WRITE);
+      geopoint_key_, size_, Poco::SharedMemory::AccessMode::AM_WRITE);
  
   togeopoint_thread_ = boost::thread(boost::bind(&GPSHardwareInterface::nmeaSentenceCallback, this, sentense));
   return hardware_interface::return_type::OK;
@@ -244,11 +243,13 @@ void GPSHardwareInterface::nmeaSentenceCallback(nmea_msgs::msg::Sentence msg)
       if (east_or_west_str == "W") {
         longitude = longitude * -1;
       }
+      
       geopoint.latitude = latitude;
       geopoint.longitude = longitude;
       geopoint.altitude = 0.0;
       geopoint_ = geopoint;
-      memcpy(geopoint_memory_ptr_->begin(), geopoint_, sizeof("gps_geopoint"));
+      size_ = sizeof(geopoint);
+      memcpy(geopoint_memory_ptr_->begin(), geopoint_, size_);
     }
   }
 }
