@@ -1,4 +1,4 @@
-make_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.5)
 project(nmea_hardware_interface)
 
 # Default to C99
@@ -30,7 +30,7 @@ find_package(nmea_msgs REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system thread)
 
 add_library(nmea_hardware_interface SHARED
-  src/nmea_hardware_interface.cpp
+  src/gps_hardware_interface.cpp
 )
 
 target_include_directories(
@@ -55,6 +55,12 @@ pluginlib_export_plugin_description_file(hardware_interface nmea_hardware_interf
 
 add_library(nmea_controller_interface SHARED
   src/geopoint_publisher.cpp
+)
+
+target_include_directories(
+  nmea_controller_interface
+  PRIVATE
+  include
 )
 
 ament_target_dependencies(nmea_controller_interface

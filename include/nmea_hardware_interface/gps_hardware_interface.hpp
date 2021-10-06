@@ -15,12 +15,20 @@
 #ifndef NMEA_HARDWARE_INTERFACE__GPS_HARDWARE_INTERFACE_HPP_
 #define NMEA_HARDWARE_INTERFACE__GPS_HARDWARE_INTERFACE_HPP_
 
+#if GALACTIC
+#include <hardware_interface/system_interface.hpp>
+#else
 #include <hardware_interface/base_interface.hpp>
+#endif
 #include <hardware_interface/handle.hpp>
 #include <hardware_interface/hardware_info.hpp>
 #include <hardware_interface/sensor_interface.hpp>
 #include <hardware_interface/types/hardware_interface_return_values.hpp>
+#if GALACTIC
+#include <hardware_interface/types/hardware_interface_type_values.hpp>
+#else
 #include <hardware_interface/types/hardware_interface_status_values.hpp>
+#endif
 
 #include <boost/array.hpp>
 #include <boost/asio.hpp>
@@ -28,7 +36,7 @@
 #include <boost/thread.hpp>
 #include <memory>
 #include <nmea_msgs/msg/sentence.hpp>
-#include <geographic_msg/msg/geopoint.hpp>
+#include <geographic_msgs/msg/geo_point.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <string>
@@ -37,24 +45,34 @@
 namespace nmea_hardware_interface
 {
 class GPSHardwareInterface
-  : public hardware_interface::BaseInterface<hardware_interface::SensorInterface>
+#if GALACTIC
+: public hardware_interface::SensorInterface
+#else
+: public hardware_interface::BaseInterface<hardware_interface::SensorInterface>
+#endif
 {
 public:
   RCLCPP_SHARED_PTR_DEFINITIONS(GPSHardwareInterface)
 
+#if GALACTIC
+  NMEA_HARDWARE_INTERFACE_PUBLIC
+  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_init(
+    const hardware_interface::HardwareInfo & info) override;
+#else
   NMEA_HARDWARE_INTERFACE_PUBLIC
   hardware_interface::return_type configure(const hardware_interface::HardwareInfo & info) override;
-
-  ~configure();
+#endif
 
   NMEA_HARDWARE_INTERFACE_PUBLIC
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
 
+#ifndef GALACTIC
   NMEA_HARDWARE_INTERFACE_PUBLIC
   hardware_interface::return_type start() override;
 
   NMEA_HARDWARE_INTERFACE_PUBLIC
   hardware_interface::return_type stop() override;
+#endif
 
   NMEA_HARDWARE_INTERFACE_PUBLIC
   hardware_interface::return_type read() override;
@@ -70,8 +88,6 @@ private:
 
 
   boost::thread togeopoint_thread_;
-  std::shared_ptr<Poco::SharedMemory> geopoint_memory_ptr_;
-
   std::string device_file_;
   int baud_rate_;
   std::string frame_id_;
@@ -92,7 +108,6 @@ private:
   void nmeaSentenceCallback(const nmea_msgs::msg::Sentence::SharedPtr msg);
   std::string calculateChecksum(std::string sentence);
   boost::optional<geographic_msgs::msg::GeoPoint> geopoint_;
-  boost::optional<geometry_msgs::msg::Quaternion> quat_;
   bool isGprmcSentence(nmea_msgs::msg::Sentence sentence);
   bool isGphdtSentence(nmea_msgs::msg::Sentence sentence);
   std::vector<std::string> split(const std::string & s, char delim);

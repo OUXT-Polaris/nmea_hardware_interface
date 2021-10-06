@@ -1,0 +1,9 @@
+<library path="nmea_controller_interface">
+    <class name="nmea_hardware_interface/GeoPointPublisher"
+           type="nmea_hardware_interface::GeoPointPublisher"
+           base_class_type="controller_interface::ControllerInterface">
+      <description>
+        geopoint publisher controller plugin for realsense
+      </description>
+    </class>
+</library>

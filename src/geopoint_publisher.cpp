@@ -66,7 +66,7 @@ GeoPointPublisher::on_configure(const rclcpp_lifecycle::State & /*previous_state
   }
   geopoint_pub_realtime_ =
     std::make_shared<realtime_tools::RealtimePublisher<
-        geographic_msg::msg::GeoPoint>>(geopoint_pub_);
+        geographic_msgs::msg::GeoPoint>>(geopoint_pub_);
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
@@ -84,7 +84,7 @@ void GeoPointPublisher::publishGeopoint()
   header.stamp = now;
 #endif
 
-  geographic_msg::msg::GeoPoint::SharedPtr geopoint_msg = geopoint_memory_ptr_;
+  geographic_msgs::msg::GeoPoint::SharedPtr geopoint_msg = geopoint_;
   if (geopoint_pub_realtime_->trylock()) {
     geopoint_realtime_->msg_ = *geopoint_msg;
     geopoint_pub_realtime_->unlockAndPublish();
@@ -101,7 +101,6 @@ controller_interface::return_type GeoPointPublisher::update()
 {
   auto node = get_node();
 #if GALACTIC
-  const auto now = time;
 #else
   const auto now = node->get_clock()->now();
 #endif

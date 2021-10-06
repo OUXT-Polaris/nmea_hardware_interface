@@ -22,8 +22,13 @@
 
 namespace nmea_hardware_interface
 {
+#if GALACTIC
+rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
+GPSHardwareInterface::on_init(const hardware_interface::HardwareInfo & info)
+#else
 hardware_interface::return_type GPSHardwareInterface::configure(
   const hardware_interface::HardwareInfo & info)
+#endif
 {
   declare_parameter("device_file", "/dev/ttyACM0");
   get_parameter("device_file", device_file_);
@@ -35,33 +40,42 @@ hardware_interface::return_type GPSHardwareInterface::configure(
   connectSerialPort();
   using namespace std::chrono_literals;
   timer_ = create_wall_timer(1000ms, std::bind(&GPSHardwareInterface::timerCallback, this));
+  #if GALACTIC
+  if (
+    SensorInterface::on_init(info) !=
+    rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS) {
+    return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::ERROR;
+  }
+#else
   if (configure_default(info) != hardware_interface::return_type::OK)
   {
     return hardware_interface::return_type::ERROR;
   }
-  if (configure_default(info) != hardware_interface::return_type::OK) {
-    return hardware_interface::return_type::ERROR;
-  }
+#endif
   if (info.joints.size() != 1) {
     throw std::runtime_error("joint size should be 1");
   }
   joint_ = info.joints[0].name;
   status_ = hardware_interface::status::CONFIGURED;
+#if GALACTIC
+  return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
+#else
   return hardware_interface::return_type::OK;
+#endif
 }
-
-GPSHardwareInterface::~configure() { io_thread_.join(); }
-
 
 std::vector<hardware_interface::StateInterface> GPSHardwareInterface::export_state_interfaces()
 {
   std::vector<hardware_interface::StateInterface> state_interfaces = {};
-  geopoint_memory_ptr_  = std::make_shared<geographic_msgs::msg::GeoPoint>(geopoint_);
-  geopoint_memory_ptr_->appendStateInterface(state_interfaces);
+  geopoint_.latitude.appendStateInterface(state_interfaces);
+  geopoint_.longitude.appendStateInterface(state_interfaces);
+  geopoint_.altitude.appendStateInterface(state_interfaces);
+  
 
   return state_interfaces;
 }
 
+#ifndef GALACTIC
 hardware_interface::return_type GPSHardwareInterface::start()
 {
   status_ = hardware_interface::status::STARTED;
@@ -77,10 +91,10 @@ hardware_interface::return_type GPSHardwareInterface::stop()
   status_ = hardware_interface::status::STOPPED;
   return hardware_interface::return_type::OK;
 }
+#endif
 
 hardware_interface::return_type GPSHardwareInterface::read()
 {
-  geopoint_memory_ptr_ ->setValue(geopoint_);
   return hardware_interface::return_type::OK;
 }
 
@@ -109,7 +123,6 @@ bool GPSHardwareInterface::validatecheckSum(std::string sentence)
   }
   std::string message = "checksum does not match in calculating sentence :" + sentence +
                         " calculated checksum is " + ret;
-  RCLCPP_DEBUG(get_logger(), message.c_str());
   return false;
 }
 
@@ -134,7 +147,7 @@ std::string GPSHardwareInterface::getHexString(uint8_t value)
   return ret;
 }
 
-boost::optional<std::string> NmeaGpsDriverComponent::validate(std::string sentence)
+boost::optional<std::string> GPSHardwareInterface::validate(std::string sentence)
 {
   try {
     sentence = "$" + sentence;
@@ -150,7 +163,6 @@ boost::optional<std::string> NmeaGpsDriverComponent::validate(std::string senten
     }
   } catch (const std::exception & e) {
     std::string message = "while processing : " + sentence + " : " + e.what();
-    RCLCPP_WARN(get_logger(), message.c_str());
     return boost::none;
   }
   return sentence;
@@ -168,10 +180,10 @@ void GPSHardwareInterface::connectSerialPort()
       boost::asio::serial_port_base::parity(boost::asio::serial_port_base::parity::none));
     port_ptr_->set_option(
       boost::asio::serial_port_base::stop_bits(boost::asio::serial_port_base::stop_bits::one));
-    io_thread_ = boost::thread(boost::bind(&NmeaGpsDriverComponent::readSentence, this));
+    io_thread_ = boost::thread(boost::bind(&GPSHardwareInterface::readSentence, this));
     connected_ = true;
   } catch (const std::exception & e) {
-    RCLCPP_ERROR(get_logger(), e.what());
+
     connected_ = false;
   }
 }
@@ -203,7 +215,7 @@ void GPSHardwareInterface::readSentence()
     try {
       port_ptr_->read_some(boost::asio::buffer(buf_));
     } catch (const std::exception & e) {
-      RCLCPP_ERROR(get_logger(), e.what());
+      
       connected_ = false;
       return;
     }

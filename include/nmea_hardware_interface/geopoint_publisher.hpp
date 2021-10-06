@@ -27,9 +27,8 @@
 #include <rclcpp/subscription.hpp>
 #include <rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp>
 #include <rclcpp_lifecycle/state.hpp>
-#include <geographic_msg/msg/geopoint.hpp>
+#include <geographic_msgs/msg/geo_point.hpp>
 #include <rclcpp/rclcpp.hpp>
-
 
 #include <string>
 #include <unordered_map>
@@ -49,6 +48,7 @@ public:
     return controller_interface::InterfaceConfiguration{
       controller_interface::interface_configuration_type::NONE};
   }
+
 
   NMEA_HARDWARE_INTERFACE_PUBLIC
   controller_interface::InterfaceConfiguration state_interface_configuration() const override
@@ -83,12 +83,11 @@ public:
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
   }
 
+  NMEA_HARDWARE_INTERFACE_PUBLIC
 #if GALACTIC
-  DYNAMIXEL_HARDWARE_INTERFACE_PUBLIC
   controller_interface::return_type update(
     const rclcpp::Time & time, const rclcpp::Duration & period) override;
 #else
-  NMEA_HARDWARE_INTERFACE_PUBLIC
   controller_interface::return_type update() override;
 #endif
 
@@ -99,12 +98,12 @@ private:
   size_t size_;
   std::string geopoint_topic_;
 
-  std::string geopoint_key_;
+  
   std::shared_ptr<rclcpp::Clock> clock_ptr_;
-  std::shared_ptr<Poco::SharedMemory> geopoint_memory_ptr_;
+  boost::optional<geographic_msgs::msg::GeoPoint> geopoint_;
   double configure_time_;
   double next_update_time_;
-  rclcpp::Publisher<geographic_msg::msg::GeoPoint>::SharedPtr geopoint_pub_;
+  rclcpp::Publisher<geographic_msgs::msg::GeoPoint>::SharedPtr geopoint_pub_;
 };
 }  // namespace nmea_hardware_interface
 
