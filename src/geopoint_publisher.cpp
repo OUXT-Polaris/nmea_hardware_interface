@@ -28,18 +28,20 @@ controller_interface::return_type GeoPointPublisher::init(const std::string & co
   }
   auto node = get_node();
   clock_ptr_ = node->get_clock();
-  node->declare_parameter("optical_frame", "");
-  optical_frame_ = node->get_parameter("optical_frame").as_string();
+ 
   node->declare_parameter("geopoint_topic", "");
   geopoint_topic_ = node->get_parameter("geopoint_topic").as_string();
+
+  node->declare_parameter("frame_id", "");
+  frame_id_ = node->get_parameter("frame_id").as_string();
 
   node->declare_parameter("publish_rate", 30.0);
   publish_rate_ = node->get_parameter("publish_rate").as_double();
   update_duration_ = 1.0 / publish_rate_;
-  std::string qos;
+  
   node->declare_parameter("qos", "sensor");
   qos_ = node->get_parameter("qos").as_string();
-  geopoint_memory_ptr_ = std::make_shared<geographic_msgs::msg::GeoPoint>(geopoint_);
+  
   return controller_interface::return_type::OK;
 }
 
@@ -53,12 +55,12 @@ GeoPointPublisher::on_configure(const rclcpp_lifecycle::State & /*previous_state
 
   if (qos_ == "sensor") {
     geopoint_pub_ =
-      node->create_publisher<geographic_msg::msg::GeoPoint>(
+      node->create_publisher<geographic_msgs::msg::GeoPoint>(
       geopoint_topic_,
       rclcpp::SensorDataQoS());
   } else if (qos_ == "system_default") {
     geopoint_pub_ =
-      node->create_publisher<geographic_msg::msg::GeoPoint>(
+      node->create_publisher<geographic_msgs::msg::GeoPoint>(
       geopoint_topic_,
       rclcpp::SystemDefaultsQoS());
   } else {
@@ -77,16 +79,14 @@ void GeoPointPublisher::publishGeopoint()
   const auto now = node->get_clock()->now();
 
   std_msgs::msg::Header header;
-  header.frame_id = optical_frame_;
-#if GALACTIC
-  header.stamp = time;
-#else
-  header.stamp = now;
-#endif
+  header.frame_id = frame_id_;
 
-  geographic_msgs::msg::GeoPoint::SharedPtr geopoint_msg = geopoint_;
+  header.stamp = now;
+
+
+  geographic_msgs::msg::GeoPoint::SharedPtr geopoint_msg = std::make_shared<geographic_msgs::msg::GeoPoint>(geopoint_);
   if (geopoint_pub_realtime_->trylock()) {
-    geopoint_realtime_->msg_ = *geopoint_msg;
+    geopoint_pub_realtime_->msg_ = *geopoint_msg;
     geopoint_pub_realtime_->unlockAndPublish();
   }
   next_update_time_ = next_update_time_ + update_duration_;
@@ -101,6 +101,7 @@ controller_interface::return_type GeoPointPublisher::update()
 {
   auto node = get_node();
 #if GALACTIC
+  const auto now = time;
 #else
   const auto now = node->get_clock()->now();
 #endif

@@ -30,16 +30,14 @@ hardware_interface::return_type GPSHardwareInterface::configure(
   const hardware_interface::HardwareInfo & info)
 #endif
 {
-  declare_parameter("device_file", "/dev/ttyACM0");
-  get_parameter("device_file", device_file_);
-  declare_parameter("baud_rate", 9600);
-  get_parameter("baud_rate", baud_rate_);
-  declare_parameter("frame_id", "gps");
-  get_parameter("frame_id", frame_id_);
+  device_file_ = info.hardware_parameters.at("device_file");
+  baud_rate_ = std::stoi(info.hardware_parameters.at("baud_rate"));
+  frame_id_ = info.hardware_parameters.at("frame_id");
+
 
   connectSerialPort();
   using namespace std::chrono_literals;
-  timer_ = create_wall_timer(1000ms, std::bind(&GPSHardwareInterface::timerCallback, this));
+  //timer_ = rclcpp::create_wall_timer(1000ms, std::bind(&GPSHardwareInterface::timerCallback, this));
   #if GALACTIC
   if (
     SensorInterface::on_init(info) !=
@@ -56,10 +54,11 @@ hardware_interface::return_type GPSHardwareInterface::configure(
     throw std::runtime_error("joint size should be 1");
   }
   joint_ = info.joints[0].name;
-  status_ = hardware_interface::status::CONFIGURED;
+  
 #if GALACTIC
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 #else
+  status_ = hardware_interface::status::CONFIGURED;
   return hardware_interface::return_type::OK;
 #endif
 }
@@ -67,10 +66,9 @@ hardware_interface::return_type GPSHardwareInterface::configure(
 std::vector<hardware_interface::StateInterface> GPSHardwareInterface::export_state_interfaces()
 {
   std::vector<hardware_interface::StateInterface> state_interfaces = {};
-  geopoint_.latitude.appendStateInterface(state_interfaces);
-  geopoint_.longitude.appendStateInterface(state_interfaces);
-  geopoint_.altitude.appendStateInterface(state_interfaces);
-  
+  state_interfaces.emplace_back(hardware_interface::StateInterface("nmea_gps", "latitude", &geopoint_.latitude));
+  state_interfaces.emplace_back(hardware_interface::StateInterface("nmea_gps", "longitude", &geopoint_.longitude));
+  state_interfaces.emplace_back(hardware_interface::StateInterface("nmea_gps", "altitude", &geopoint_.altitude));
 
   return state_interfaces;
 }
@@ -98,14 +96,12 @@ hardware_interface::return_type GPSHardwareInterface::read()
   return hardware_interface::return_type::OK;
 }
 
-hardware_interface::return_type GPSHardwareInterface::write()
-{
-  return hardware_interface::return_type::OK;
-}
 
 bool GPSHardwareInterface::validatecheckSum(std::string sentence)
 {
-  auto splited_sentence = split(sentence, '*');
+  char delim = '*';
+
+  auto splited_sentence = split(sentence, delim);
   if (splited_sentence.size() != 2) {
     return false;
   }
@@ -195,7 +191,7 @@ void GPSHardwareInterface::timerCallback()
   }
 }
 
-std::vector<std::string> GPSHardwareInterface::split(std::string s, char delim)
+std::vector<std::string> GPSHardwareInterface::split(const std::string &s, char delim)
 {
   std::vector<std::string> elems;
   std::stringstream ss(s);
@@ -215,24 +211,22 @@ void GPSHardwareInterface::readSentence()
     try {
       port_ptr_->read_some(boost::asio::buffer(buf_));
     } catch (const std::exception & e) {
-      
       connected_ = false;
       return;
     }
     std::string data(buf_.begin(), buf_.end());
     std::vector<std::string> splited_sentence = split(data, '$');
-    rclcpp::Time time = get_clock()->now();
+    
     for (auto itr = splited_sentence.begin(); itr != splited_sentence.end(); itr++) {
       auto line = validate(*itr);
       if (line) {
         sentence.header.frame_id = frame_id_;
-        sentence.header.stamp = time;
         sentence.sentence = line.get();
       }
     }
   }
 }
-
+/*
 void GPSHardwareInterface::nmeaSentenceCallback(nmea_msgs::msg::Sentence msg)
 {
   nmea_msgs::msg::Sentence sentence = *msg;
@@ -260,6 +254,7 @@ void GPSHardwareInterface::nmeaSentenceCallback(nmea_msgs::msg::Sentence msg)
       geopoint_ = geopoint;
   }
 }
+*/
 
 boost::optional<std::vector<std::string>> GPSHardwareInterface::splitSentence(
   nmea_msgs::msg::Sentence sentence)

@@ -55,30 +55,26 @@ public:
   RCLCPP_SHARED_PTR_DEFINITIONS(GPSHardwareInterface)
 
 #if GALACTIC
-  NMEA_HARDWARE_INTERFACE_PUBLIC
+    
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_init(
     const hardware_interface::HardwareInfo & info) override;
 #else
-  NMEA_HARDWARE_INTERFACE_PUBLIC
+    
   hardware_interface::return_type configure(const hardware_interface::HardwareInfo & info) override;
 #endif
 
-  NMEA_HARDWARE_INTERFACE_PUBLIC
+    
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
 
 #ifndef GALACTIC
-  NMEA_HARDWARE_INTERFACE_PUBLIC
+    
   hardware_interface::return_type start() override;
 
-  NMEA_HARDWARE_INTERFACE_PUBLIC
+    
   hardware_interface::return_type stop() override;
 #endif
 
-  NMEA_HARDWARE_INTERFACE_PUBLIC
   hardware_interface::return_type read() override;
-
-  NMEA_HARDWARE_INTERFACE_PUBLIC
-  hardware_interface::return_type write() override;
 
 private:
   std::string joint_;
@@ -96,7 +92,7 @@ private:
   boost::thread io_thread_;
   void readSentence();
   boost::array<char, 256> buf_;
-  std::vector<std::string> split(std::string s, char delim);
+  
   void connectSerialPort();
   bool connected_ = false;
   void timerCallback();
@@ -107,12 +103,14 @@ private:
 
   void nmeaSentenceCallback(const nmea_msgs::msg::Sentence::SharedPtr msg);
   std::string calculateChecksum(std::string sentence);
-  boost::optional<geographic_msgs::msg::GeoPoint> geopoint_;
+  geographic_msgs::msg::GeoPoint geopoint_;
   bool isGprmcSentence(nmea_msgs::msg::Sentence sentence);
   bool isGphdtSentence(nmea_msgs::msg::Sentence sentence);
   std::vector<std::string> split(const std::string & s, char delim);
   std::vector<std::string> splitChecksum(std::string str);
   boost::optional<std::vector<std::string>> splitSentence(nmea_msgs::msg::Sentence sentence);
+
+  
 };
 }  // namespace nmea_hardware_interface
 

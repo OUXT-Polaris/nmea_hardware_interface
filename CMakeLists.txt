@@ -92,9 +92,10 @@ install(
   DESTINATION lib
 )
 
-install(DIRECTORY config launch urdf
-  DESTINATION share/${PROJECT_NAME}
-)
+
+#install(DIRECTORY config launch urdf
+#  DESTINATION share/${PROJECT_NAME}
+#)
 
 
 

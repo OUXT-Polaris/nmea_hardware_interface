@@ -39,10 +39,10 @@ namespace nmea_hardware_interface
 class GeoPointPublisher : public controller_interface::ControllerInterface
 {
 public:
-  NMEA_HARDWARE_INTERFACE_PUBLIC
+   
   controller_interface::return_type init(const std::string & controller_name) override;
 
-  NMEA_HARDWARE_INTERFACE_PUBLIC
+   
   controller_interface::InterfaceConfiguration command_interface_configuration() const override
   {
     return controller_interface::InterfaceConfiguration{
@@ -50,7 +50,7 @@ public:
   }
 
 
-  NMEA_HARDWARE_INTERFACE_PUBLIC
+   
   controller_interface::InterfaceConfiguration state_interface_configuration() const override
   {
     std::vector<std::string> interface_names = {};
@@ -65,25 +65,25 @@ public:
   }
 #endif
 
-  NMEA_HARDWARE_INTERFACE_PUBLIC
+   
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_configure(
     const rclcpp_lifecycle::State & /*previous_state*/) override;
 
-  NMEA_HARDWARE_INTERFACE_PUBLIC
+   
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_activate(
     const rclcpp_lifecycle::State & /*previous_state*/) override
   {
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
   }
 
-  NMEA_HARDWARE_INTERFACE_PUBLIC
+   
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_deactivate(
     const rclcpp_lifecycle::State & /*previous_state*/) override
   {
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
   }
 
-  NMEA_HARDWARE_INTERFACE_PUBLIC
+   
 #if GALACTIC
   controller_interface::return_type update(
     const rclcpp::Time & time, const rclcpp::Duration & period) override;
@@ -97,13 +97,15 @@ private:
   double update_duration_;
   size_t size_;
   std::string geopoint_topic_;
-
+  std::string frame_id_;
+  std::string qos_;
   
   std::shared_ptr<rclcpp::Clock> clock_ptr_;
-  boost::optional<geographic_msgs::msg::GeoPoint> geopoint_;
+  geographic_msgs::msg::GeoPoint geopoint_;
   double configure_time_;
   double next_update_time_;
   rclcpp::Publisher<geographic_msgs::msg::GeoPoint>::SharedPtr geopoint_pub_;
+  std::shared_ptr<realtime_tools::RealtimePublisher<geographic_msgs::msg::GeoPoint>> geopoint_pub_realtime_;
 };
 }  // namespace nmea_hardware_interface
 
