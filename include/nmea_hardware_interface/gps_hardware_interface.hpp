@@ -30,6 +30,9 @@
 #include <hardware_interface/types/hardware_interface_status_values.hpp>
 #endif
 
+// Headers in ROS
+#include <quaternion_operation/quaternion_operation.h>
+
 #include <boost/array.hpp>
 #include <boost/asio.hpp>
 #include <boost/optional.hpp>
@@ -37,6 +40,8 @@
 #include <memory>
 #include <nmea_msgs/msg/sentence.hpp>
 #include <geographic_msgs/msg/geo_point.hpp>
+#include <geographic_msgs/msg/geo_pose.hpp>
+#include <geometry_msgs/msg/quaternion.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <string>
@@ -78,12 +83,10 @@ public:
 
 private:
   std::string joint_;
-  std::string geopoint_key_;
-  nmea_msgs::msg::Sentence sentence;
+  nmea_msgs::msg::Sentence sentence_;
   size_t size_;
 
-
-  boost::thread togeopoint_thread_;
+  boost::thread togeopose_thread_;
   std::string device_file_;
   int baud_rate_;
   std::string frame_id_;
@@ -101,16 +104,16 @@ private:
   bool validatecheckSum(std::string sentence);
   std::string getHexString(uint8_t value);
 
-  void nmeaSentenceCallback(const nmea_msgs::msg::Sentence::SharedPtr msg);
+  void nmea_to_geopose();
   std::string calculateChecksum(std::string sentence);
   geographic_msgs::msg::GeoPoint geopoint_;
+  geometry_msgs::msg::Quaternion quat_;
+  geographic_msgs::msg::GeoPose geopose_;
   bool isGprmcSentence(nmea_msgs::msg::Sentence sentence);
   bool isGphdtSentence(nmea_msgs::msg::Sentence sentence);
   std::vector<std::string> split(const std::string & s, char delim);
   std::vector<std::string> splitChecksum(std::string str);
   boost::optional<std::vector<std::string>> splitSentence(nmea_msgs::msg::Sentence sentence);
-
-  
 };
 }  // namespace nmea_hardware_interface
 

@@ -24,6 +24,7 @@ find_package(ros2_control REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(realtime_tools REQUIRED)
 find_package(hardware_interface REQUIRED)
+find_package(quaternion_operation REQUIRED)
 find_package(controller_interface REQUIRED)
 find_package(geographic_msgs REQUIRED)
 find_package(nmea_msgs REQUIRED)
@@ -49,12 +50,13 @@ ament_target_dependencies(nmea_hardware_interface
   ros2_control
   realtime_tools
   geographic_msgs
+  quaternion_operation
   nmea_msgs
 )
 pluginlib_export_plugin_description_file(hardware_interface nmea_hardware_interface.xml)
 
 add_library(nmea_controller_interface SHARED
-  src/geopoint_publisher.cpp
+  src/geopose_publisher.cpp
 )
 
 target_include_directories(
@@ -83,6 +85,7 @@ ament_export_dependencies(
   rclcpp
   ros2_control
   realtime_tools
+  quaternion_operation
   geographic_msgs
   nmea_msgs
 )

@@ -36,6 +36,7 @@ hardware_interface::return_type GPSHardwareInterface::configure(
 
 
   connectSerialPort();
+  
   using namespace std::chrono_literals;
   //timer_ = rclcpp::create_wall_timer(1000ms, std::bind(&GPSHardwareInterface::timerCallback, this));
   #if GALACTIC
@@ -66,9 +67,9 @@ hardware_interface::return_type GPSHardwareInterface::configure(
 std::vector<hardware_interface::StateInterface> GPSHardwareInterface::export_state_interfaces()
 {
   std::vector<hardware_interface::StateInterface> state_interfaces = {};
-  state_interfaces.emplace_back(hardware_interface::StateInterface("nmea_gps", "latitude", &geopoint_.latitude));
-  state_interfaces.emplace_back(hardware_interface::StateInterface("nmea_gps", "longitude", &geopoint_.longitude));
-  state_interfaces.emplace_back(hardware_interface::StateInterface("nmea_gps", "altitude", &geopoint_.altitude));
+  state_interfaces.emplace_back(hardware_interface::StateInterface("nmea_gps", "latitude", &geopose_.position.latitude));
+  state_interfaces.emplace_back(hardware_interface::StateInterface("nmea_gps", "longitude", &geopose_.position.longitude));
+  state_interfaces.emplace_back(hardware_interface::StateInterface("nmea_gps", "altitude", &geopose_.position.altitude));
 
   return state_interfaces;
 }
@@ -77,15 +78,15 @@ std::vector<hardware_interface::StateInterface> GPSHardwareInterface::export_sta
 hardware_interface::return_type GPSHardwareInterface::start()
 {
   status_ = hardware_interface::status::STARTED;
-  togeopoint_thread_ = boost::thread(
-    boost::bind(&GPSHardwareInterface::nmeaSentenceCallback, this, sentense));
+  togeopose_thread_ = boost::thread(
+    boost::bind(&GPSHardwareInterface::nmea_to_geopose, this, sentense));
   return hardware_interface::return_type::OK;
 }
 
 hardware_interface::return_type GPSHardwareInterface::stop()
 {
   io_thread_.join();
-  togeopoint_thread_.join();
+  togeopose_thread_.join();
   status_ = hardware_interface::status::STOPPED;
   return hardware_interface::return_type::OK;
 }
@@ -220,19 +221,18 @@ void GPSHardwareInterface::readSentence()
     for (auto itr = splited_sentence.begin(); itr != splited_sentence.end(); itr++) {
       auto line = validate(*itr);
       if (line) {
-        sentence.header.frame_id = frame_id_;
-        sentence.sentence = line.get();
+        sentence_.header.frame_id = frame_id_;
+        sentence_.sentence = line.get();
       }
     }
   }
 }
-/*
-void GPSHardwareInterface::nmeaSentenceCallback(nmea_msgs::msg::Sentence msg)
+
+void GPSHardwareInterface::nmea_to_geopose()
 {
-  nmea_msgs::msg::Sentence sentence = *msg;
-  if (isGprmcSentence(sentence)) {
+  if (isGprmcSentence(sentence_)) {
     geographic_msgs::msg::GeoPoint geopoint;
-    boost::optional<std::vector<std::string>> data = splitSentence(sentence);
+    boost::optional<std::vector<std::string>> data = splitSentence(sentence_);
     if (data) {
       std::string lat_str = data.get()[3];
       std::string north_or_south_str = data.get()[4];
@@ -252,9 +252,29 @@ void GPSHardwareInterface::nmeaSentenceCallback(nmea_msgs::msg::Sentence msg)
       geopoint.longitude = longitude;
       geopoint.altitude = 0.0;
       geopoint_ = geopoint;
+    }
   }
+  if (isGphdtSentence(sentence_)) {
+    boost::optional<std::vector<std::string>> data = splitSentence(sentence_);
+    if (data) {
+      if (data.get()[2] == "T") {
+        double heading = std::stod(data.get()[1]);
+        geometry_msgs::msg::Vector3 vec;
+        vec.x = 0.0;
+        vec.y = 0.0;
+        vec.z = heading / 180 * M_PI * -1;
+        geometry_msgs::msg::Quaternion quat =
+          quaternion_operation::convertEulerAngleToQuaternion(vec);
+        quat_ = quat;
+      }
+    }
+  }
+  geographic_msgs::msg::GeoPose geopose;
+  geopose.position = geopoint_;
+  geopose.orientation = quat_;
+  geopose_ = geopose;
 }
-*/
+
 
 boost::optional<std::vector<std::string>> GPSHardwareInterface::splitSentence(
   nmea_msgs::msg::Sentence sentence)

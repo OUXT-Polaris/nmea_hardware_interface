@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NMEA_HARDWARE_INTERFACE__GEOPOINT_PUBLISHER_HPP_
-#define NMEA_HARDWARE_INTERFACE__GEOPOINT_PUBLISHER_HPP_
+#ifndef NMEA_HARDWARE_INTERFACE__GEOPOSE_PUBLISHER_HPP_
+#define NMEA_HARDWARE_INTERFACE__GEOPOSE_PUBLISHER_HPP_
 
 
 #include <realtime_tools/realtime_buffer.h>
@@ -27,7 +27,7 @@
 #include <rclcpp/subscription.hpp>
 #include <rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp>
 #include <rclcpp_lifecycle/state.hpp>
-#include <geographic_msgs/msg/geo_point.hpp>
+#include <geographic_msgs/msg/geo_pose.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <string>
@@ -36,7 +36,7 @@
 
 namespace nmea_hardware_interface
 {
-class GeoPointPublisher : public controller_interface::ControllerInterface
+class GeoPosePublisher : public controller_interface::ControllerInterface
 {
 public:
    
@@ -92,21 +92,21 @@ public:
 #endif
 
 private:
-  void publishGeopoint();
+  void publishGeoPose();
   double publish_rate_;
   double update_duration_;
   size_t size_;
-  std::string geopoint_topic_;
+  std::string geopose_topic_;
   std::string frame_id_;
   std::string qos_;
   
   std::shared_ptr<rclcpp::Clock> clock_ptr_;
-  geographic_msgs::msg::GeoPoint geopoint_;
+  geographic_msgs::msg::GeoPose geopose_;
   double configure_time_;
   double next_update_time_;
-  rclcpp::Publisher<geographic_msgs::msg::GeoPoint>::SharedPtr geopoint_pub_;
-  std::shared_ptr<realtime_tools::RealtimePublisher<geographic_msgs::msg::GeoPoint>> geopoint_pub_realtime_;
+  rclcpp::Publisher<geographic_msgs::msg::GeoPose>::SharedPtr geopose_pub_;
+  std::shared_ptr<realtime_tools::RealtimePublisher<geographic_msgs::msg::GeoPose>> geopose_pub_realtime_;
 };
 }  // namespace nmea_hardware_interface
 
-#endif  // NMEA_HARDWARE_INTERFACE__GEOPOINT_PUBLISHER_HPP_
+#endif  // NMEA_HARDWARE_INTERFACE__GEOPOSE_PUBLISHER_HPP_
