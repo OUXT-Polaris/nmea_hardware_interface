@@ -1,0 +1,22 @@
+<robot name="test_robot">
+  <link name="t265_link"/>
+
+  <link name="t265_optical_link"/>
+  <joint name="t265_optical_joint" type="fixed">
+    <parent link="t265_link"/>
+    <child link="t265_optical_link"/>
+    <origin rpy="-1.57079632679 0 -1.57079632679" xyz="0 0 0"/>
+  </joint>
+
+  <ros2_control name="t265_control" type="sensor">
+    <hardware>
+      <plugin>realsense_hardware_interface/T265HardwareInterface</plugin>
+      <param name="retrive_image">true</param>
+      <param name="left_image_key">t265_left_fisheye</param>
+      <param name="right_image_key">t265_right_fisheye</param>
+      <param name="serial">109422110714</param>
+    </hardware>
+    <joint name="t265_link">
+    </joint>
+  </ros2_control>
+</robot>
