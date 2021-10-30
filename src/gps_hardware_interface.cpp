@@ -292,7 +292,16 @@ boost::optional<std::vector<std::string>> GPSHardwareInterface::splitSentence(
 bool GPSHardwareInterface::isGprmcSentence(nmea_msgs::msg::Sentence sentence)
 {
   std::string type = sentence.sentence.substr(0, 6);
-  if (type == "$GPRMC") {
+  if (type == /*"$GPRMC"*/ "$GNRMC") {
+    return true;
+  }
+  return false;
+}
+
+bool GPSHardwareInterface::isGphdtSentence(nmea_msgs::msg::Sentence sentence)
+{
+  std::string type = sentence.sentence.substr(0, 6);
+  if (type == "$GPHDT") {
     return true;
   }
   return false;
