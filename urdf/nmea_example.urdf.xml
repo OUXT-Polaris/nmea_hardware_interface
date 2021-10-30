@@ -1,22 +1,21 @@
 <robot name="test_robot">
-  <link name="t265_link"/>
+  <link name="gps_link"/>
 
-  <link name="t265_optical_link"/>
-  <joint name="t265_optical_joint" type="fixed">
-    <parent link="t265_link"/>
-    <child link="t265_optical_link"/>
+  <link name="gps_optical_link"/>
+  <joint name="gps_optical_joint" type="fixed">
+    <parent link="gps_link"/>
+    <child link="gps_optical_link"/>
     <origin rpy="-1.57079632679 0 -1.57079632679" xyz="0 0 0"/>
   </joint>
 
-  <ros2_control name="t265_control" type="sensor">
+  <ros2_control name="gps_control" type="sensor">
     <hardware>
-      <plugin>realsense_hardware_interface/T265HardwareInterface</plugin>
-      <param name="retrive_image">true</param>
-      <param name="left_image_key">t265_left_fisheye</param>
-      <param name="right_image_key">t265_right_fisheye</param>
-      <param name="serial">109422110714</param>
+      <plugin>nmea_hardware_interface/GPSHardwareInterface</plugin>
+      <param name="latitude">geopose_.position.latitude</param>
+      <param name="longitude">geopose_.position.latitude</param>
+      <param name="altitude">geopose_.position.altitude</param>
     </hardware>
-    <joint name="t265_link">
+    <joint name="gps_link">
     </joint>
   </ros2_control>
 </robot>
