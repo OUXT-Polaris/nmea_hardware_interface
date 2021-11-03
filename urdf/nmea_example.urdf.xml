@@ -11,9 +11,9 @@
   <ros2_control name="gps_control" type="sensor">
     <hardware>
       <plugin>nmea_hardware_interface/GPSHardwareInterface</plugin>
-      <param name="latitude">geopose_.position.latitude</param>
-      <param name="longitude">geopose_.position.latitude</param>
-      <param name="altitude">geopose_.position.altitude</param>
+      <param name="device_file">/dev/ttyACM0</param>
+      <param name="baud_rate">115200</param>
+      <param name="frame_id">gps_link</param>
     </hardware>
     <joint name="gps_link">
     </joint>

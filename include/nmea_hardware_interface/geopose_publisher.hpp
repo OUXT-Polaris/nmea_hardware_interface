@@ -92,7 +92,6 @@ public:
 #endif
 
 private:
-  void publishGeoPose();
   double publish_rate_;
   double update_duration_;
   size_t size_;

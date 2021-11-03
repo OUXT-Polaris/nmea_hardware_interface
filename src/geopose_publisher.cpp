@@ -29,17 +29,18 @@ controller_interface::return_type GeoPosePublisher::init(const std::string & con
   auto node = get_node();
   clock_ptr_ = node->get_clock();
  
-  node->declare_parameter("geopose_topic", "");
+  std::cout << __FILE__ << "," << __LINE__ << std::endl;
+  //node->declare_parameter("geopose_topic", "");
   geopose_topic_ = node->get_parameter("geopose_topic").as_string();
 
-  node->declare_parameter("frame_id", "");
+  //node->declare_parameter("frame_id", "");
   frame_id_ = node->get_parameter("frame_id").as_string();
 
-  node->declare_parameter("publish_rate", 30.0);
+  //node->declare_parameter("publish_rate", 30.0);
   publish_rate_ = node->get_parameter("publish_rate").as_double();
   update_duration_ = 1.0 / publish_rate_;
   
-  node->declare_parameter("qos", "sensor");
+  //node->declare_parameter("qos", "sensor");
   qos_ = node->get_parameter("qos").as_string();
   
   return controller_interface::return_type::OK;
@@ -72,26 +73,6 @@ GeoPosePublisher::on_configure(const rclcpp_lifecycle::State & /*previous_state*
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
-
-void GeoPosePublisher::publishGeoPose()
-{
-  auto node = get_node();
-  const auto now = node->get_clock()->now();
-
-  std_msgs::msg::Header header;
-  header.frame_id = frame_id_;
-
-  header.stamp = now;
-
-
-  geographic_msgs::msg::GeoPose::SharedPtr geopose_msg = std::make_shared<geographic_msgs::msg::GeoPose>(geopose_);
-  if (geopose_pub_realtime_->trylock()) {
-    geopose_pub_realtime_->msg_ = *geopose_msg;
-    geopose_pub_realtime_->unlockAndPublish();
-  }
-  next_update_time_ = next_update_time_ + update_duration_;
-}
-
 #if GALACTIC
 controller_interface::return_type GeoPosePublisher::update(
   const rclcpp::Time & time, const rclcpp::Duration &)
@@ -107,8 +88,18 @@ controller_interface::return_type GeoPosePublisher::update()
 #endif
 
   if (std::fabs(now.seconds() - next_update_time_) < update_duration_ * 0.5) {
-    publishGeoPose();
-    return controller_interface::return_type::OK;
+
+    std_msgs::msg::Header header;
+    header.frame_id = frame_id_;
+
+    header.stamp = now;
+
+    geographic_msgs::msg::GeoPose::SharedPtr geopose_msg = std::make_shared<geographic_msgs::msg::GeoPose>(geopose_);
+    if (geopose_pub_realtime_->trylock()) {
+      geopose_pub_realtime_->msg_ = *geopose_msg;
+      geopose_pub_realtime_->unlockAndPublish();
+    }
+    next_update_time_ = next_update_time_ + update_duration_;
   }
   return controller_interface::return_type::OK;
 }

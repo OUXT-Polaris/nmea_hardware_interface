@@ -41,6 +41,11 @@ target_include_directories(
   ${Boost_INCLUDE_DIRS}
 )
 
+target_link_libraries(
+  nmea_hardware_interface
+  Boost::thread 
+)
+
 
 
 ament_target_dependencies(nmea_hardware_interface
@@ -96,9 +101,9 @@ install(
 )
 
 
-#install(DIRECTORY config launch urdf
-#  DESTINATION share/${PROJECT_NAME}
-#)
+install(DIRECTORY config launch urdf
+  DESTINATION share/${PROJECT_NAME}
+)
 
 
 
