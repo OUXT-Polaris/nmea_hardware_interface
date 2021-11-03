@@ -98,7 +98,7 @@ private:
   std::string geopose_topic_;
   std::string frame_id_;
   std::string qos_;
-  
+  bool isfirsttime;
   std::shared_ptr<rclcpp::Clock> clock_ptr_;
   geographic_msgs::msg::GeoPose geopose_;
   double configure_time_;

@@ -22,6 +22,7 @@ namespace nmea_hardware_interface
 {
 controller_interface::return_type GeoPosePublisher::init(const std::string & controller_name)
 {
+  
   auto ret = ControllerInterface::init(controller_name);
   if (ret != controller_interface::return_type::OK) {
     return ret;
@@ -86,16 +87,21 @@ controller_interface::return_type GeoPosePublisher::update()
 #else
   const auto now = node->get_clock()->now();
 #endif
-
+  if(isfirsttime)
+  {
+    next_update_time_ = now.seconds();
+    isfirsttime = false;
+  }
   if (std::fabs(now.seconds() - next_update_time_) < update_duration_ * 0.5) {
-
+    std::cout << __FILE__ << __LINE__ << std::endl;
     std_msgs::msg::Header header;
     header.frame_id = frame_id_;
 
     header.stamp = now;
-
+    std::cout << __FILE__ << __LINE__ << std::endl;
     geographic_msgs::msg::GeoPose::SharedPtr geopose_msg = std::make_shared<geographic_msgs::msg::GeoPose>(geopose_);
     if (geopose_pub_realtime_->trylock()) {
+      std::cout << __FILE__ << __LINE__ << std::endl;
       geopose_pub_realtime_->msg_ = *geopose_msg;
       geopose_pub_realtime_->unlockAndPublish();
     }

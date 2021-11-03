@@ -68,6 +68,7 @@ public:
   hardware_interface::return_type configure(const hardware_interface::HardwareInfo & info) override;
 #endif
 
+  ~GPSHardwareInterface();
     
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
 
@@ -103,7 +104,7 @@ private:
   boost::optional<std::string> validate(std::string sentence);
   bool validatecheckSum(std::string sentence);
   std::string getHexString(uint8_t value);
-
+  
   void nmea_to_geopose();
   std::string calculateChecksum(std::string sentence);
   geographic_msgs::msg::GeoPoint geopoint_;

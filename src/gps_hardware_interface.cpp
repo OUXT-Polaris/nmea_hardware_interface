@@ -33,8 +33,6 @@ hardware_interface::return_type GPSHardwareInterface::configure(
   device_file_ = info.hardware_parameters.at("device_file");
   baud_rate_ = std::stoi(info.hardware_parameters.at("baud_rate"));
   frame_id_ = info.hardware_parameters.at("frame_id");
-
-
   connectSerialPort();
   
   using namespace std::chrono_literals;
@@ -64,6 +62,12 @@ hardware_interface::return_type GPSHardwareInterface::configure(
 #endif
 }
 
+GPSHardwareInterface::~GPSHardwareInterface()
+{
+  io_thread_.join();
+  togeopose_thread_.join();
+}
+
 std::vector<hardware_interface::StateInterface> GPSHardwareInterface::export_state_interfaces()
 {
   std::vector<hardware_interface::StateInterface> state_interfaces = {};
@@ -77,9 +81,11 @@ std::vector<hardware_interface::StateInterface> GPSHardwareInterface::export_sta
 #ifndef GALACTIC
 hardware_interface::return_type GPSHardwareInterface::start()
 {
+  std::cout << __FILE__ << __LINE__ << std::endl;
   status_ = hardware_interface::status::STARTED;
   togeopose_thread_ = boost::thread(
-    boost::bind(&GPSHardwareInterface::nmea_to_geopose, this, sentense));
+    boost::bind(&GPSHardwareInterface::nmea_to_geopose, this));
+  std::cout << __FILE__ << __LINE__ << std::endl;
   return hardware_interface::return_type::OK;
 }
 
@@ -168,18 +174,27 @@ boost::optional<std::string> GPSHardwareInterface::validate(std::string sentence
 void GPSHardwareInterface::connectSerialPort()
 {
   try {
+    std::cout << "device file" << device_file_ << std::endl;
     port_ptr_ = std::make_shared<boost::asio::serial_port>(io_, device_file_);
+   
     port_ptr_->set_option(boost::asio::serial_port_base::baud_rate(baud_rate_));
+    
     port_ptr_->set_option(boost::asio::serial_port_base::character_size(8));
+   
     port_ptr_->set_option(boost::asio::serial_port_base::flow_control(
       boost::asio::serial_port_base ::flow_control::none));
+     
     port_ptr_->set_option(
       boost::asio::serial_port_base::parity(boost::asio::serial_port_base::parity::none));
+    
     port_ptr_->set_option(
       boost::asio::serial_port_base::stop_bits(boost::asio::serial_port_base::stop_bits::one));
+   
     io_thread_ = boost::thread(boost::bind(&GPSHardwareInterface::readSentence, this));
+    
     connected_ = true;
   } catch (const std::exception & e) {
+    std::cout << e.what() << std::endl;
 
     connected_ = false;
   }
@@ -208,6 +223,7 @@ std::vector<std::string> GPSHardwareInterface::split(const std::string &s, char 
 void GPSHardwareInterface::readSentence()
 {
   while (rclcpp::ok()) {
+    
     buf_ = boost::array<char, 256>();
     try {
       port_ptr_->read_some(boost::asio::buffer(buf_));
@@ -223,6 +239,7 @@ void GPSHardwareInterface::readSentence()
       if (line) {
         sentence_.header.frame_id = frame_id_;
         sentence_.sentence = line.get();
+        nmea_to_geopose();
       }
     }
   }
@@ -231,9 +248,12 @@ void GPSHardwareInterface::readSentence()
 void GPSHardwareInterface::nmea_to_geopose()
 {
   if (isGprmcSentence(sentence_)) {
+    
     geographic_msgs::msg::GeoPoint geopoint;
     boost::optional<std::vector<std::string>> data = splitSentence(sentence_);
+    
     if (data) {
+      
       std::string lat_str = data.get()[3];
       std::string north_or_south_str = data.get()[4];
       double latitude = std::stod(lat_str.substr(0, 2)) + std::stod(lat_str.substr(2)) / 60.0;
@@ -275,17 +295,26 @@ void GPSHardwareInterface::nmea_to_geopose()
   geopose_ = geopose;
 }
 
+std::vector<std::string> GPSHardwareInterface::splitChecksum(std::string str)
+{
+  return split(str, '*');
+}
 
 boost::optional<std::vector<std::string>> GPSHardwareInterface::splitSentence(
   nmea_msgs::msg::Sentence sentence)
 {
+  
   std::vector<std::string> data = splitChecksum(sentence.sentence);
+  
   if (data.size() != 2) {
+    
     return boost::none;
   }
   if (calculateChecksum(data[0]) == data[1]) {
+    
     return split(data[0], ',');
   }
+  
   return boost::none;
 }
 
