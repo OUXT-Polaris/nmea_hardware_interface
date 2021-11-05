@@ -81,11 +81,9 @@ std::vector<hardware_interface::StateInterface> GPSHardwareInterface::export_sta
 #ifndef GALACTIC
 hardware_interface::return_type GPSHardwareInterface::start()
 {
-  std::cout << __FILE__ << __LINE__ << std::endl;
   status_ = hardware_interface::status::STARTED;
   togeopose_thread_ = boost::thread(
     boost::bind(&GPSHardwareInterface::nmea_to_geopose, this));
-  std::cout << __FILE__ << __LINE__ << std::endl;
   return hardware_interface::return_type::OK;
 }
 
@@ -174,7 +172,6 @@ boost::optional<std::string> GPSHardwareInterface::validate(std::string sentence
 void GPSHardwareInterface::connectSerialPort()
 {
   try {
-    std::cout << "device file" << device_file_ << std::endl;
     port_ptr_ = std::make_shared<boost::asio::serial_port>(io_, device_file_);
    
     port_ptr_->set_option(boost::asio::serial_port_base::baud_rate(baud_rate_));

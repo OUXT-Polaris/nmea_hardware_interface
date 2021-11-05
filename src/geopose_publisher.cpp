@@ -29,8 +29,7 @@ controller_interface::return_type GeoPosePublisher::init(const std::string & con
   }
   auto node = get_node();
   clock_ptr_ = node->get_clock();
- 
-  std::cout << __FILE__ << "," << __LINE__ << std::endl;
+
   //node->declare_parameter("geopose_topic", "");
   geopose_topic_ = node->get_parameter("geopose_topic").as_string();
 
@@ -43,8 +42,33 @@ controller_interface::return_type GeoPosePublisher::init(const std::string & con
   
   //node->declare_parameter("qos", "sensor");
   qos_ = node->get_parameter("qos").as_string();
-  
+
   return controller_interface::return_type::OK;
+}
+
+controller_interface::InterfaceConfiguration
+GeoPosePublisher::state_interface_configuration() const
+{
+  controller_interface::InterfaceConfiguration state_interfaces_config;
+  state_interfaces_config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
+
+  state_interfaces_config.names.push_back("nmea_gps/latitude");
+  state_interfaces_config.names.push_back("nmea_gps/longitude");
+  state_interfaces_config.names.push_back("nmea_gps/altitude");
+
+  return state_interfaces_config;
+}
+
+double GeoPosePublisher::getValue(
+  const std::string & joint_name, const std::string & interface_name)
+{
+  for (const auto & interface : state_interfaces_) {
+    if (interface.get_name() == joint_name && interface.get_interface_name() == interface_name) {
+      return interface.get_value();
+    }
+  }
+  throw std::runtime_error(
+    "state interface : " + interface_name + " does not exist in : " + joint_name);
 }
 
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
@@ -93,15 +117,17 @@ controller_interface::return_type GeoPosePublisher::update()
     isfirsttime = false;
   }
   if (std::fabs(now.seconds() - next_update_time_) < update_duration_ * 0.5) {
-    std::cout << __FILE__ << __LINE__ << std::endl;
     std_msgs::msg::Header header;
     header.frame_id = frame_id_;
 
     header.stamp = now;
-    std::cout << __FILE__ << __LINE__ << std::endl;
+    geopose_.position.latitude = getValue("nmea_gps","latitude");
+    geopose_.position.longitude = getValue("nmea_gps","longitude");
+    geopose_.position.altitude = getValue("nmea_gps","altitude");
+ 
     geographic_msgs::msg::GeoPose::SharedPtr geopose_msg = std::make_shared<geographic_msgs::msg::GeoPose>(geopose_);
+    
     if (geopose_pub_realtime_->trylock()) {
-      std::cout << __FILE__ << __LINE__ << std::endl;
       geopose_pub_realtime_->msg_ = *geopose_msg;
       geopose_pub_realtime_->unlockAndPublish();
     }

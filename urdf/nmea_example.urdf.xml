@@ -15,7 +15,10 @@
       <param name="baud_rate">115200</param>
       <param name="frame_id">gps_link</param>
     </hardware>
-    <joint name="gps_link">
+    <joint name="nmea_gps">
+      <state_interface name ="latitude"/>
+      <state_interface name ="longitude"/>
+      <state_interface name ="altitude"/>
     </joint>
   </ros2_control>
 </robot>

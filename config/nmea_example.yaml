@@ -11,4 +11,5 @@ geopose_publisher:
     geopose_topic : /geopose_topic
     publish_rate: 30.0
     qos: sensor
-    
+    joints:
+      - nmea_gps

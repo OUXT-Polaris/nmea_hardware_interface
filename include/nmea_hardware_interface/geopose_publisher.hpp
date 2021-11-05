@@ -49,14 +49,7 @@ public:
       controller_interface::interface_configuration_type::NONE};
   }
 
-
-   
-  controller_interface::InterfaceConfiguration state_interface_configuration() const override
-  {
-    std::vector<std::string> interface_names = {};
-    return controller_interface::InterfaceConfiguration{
-      controller_interface::interface_configuration_type::INDIVIDUAL, interface_names};
-  }
+  controller_interface::InterfaceConfiguration state_interface_configuration() const override;
 
 #if GALACTIC
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_init()
@@ -65,7 +58,6 @@ public:
   }
 #endif
 
-   
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_configure(
     const rclcpp_lifecycle::State & /*previous_state*/) override;
 
@@ -101,6 +93,7 @@ private:
   bool isfirsttime;
   std::shared_ptr<rclcpp::Clock> clock_ptr_;
   geographic_msgs::msg::GeoPose geopose_;
+  double getValue(const std::string & joint_name, const std::string & interface_name);
   double configure_time_;
   double next_update_time_;
   rclcpp::Publisher<geographic_msgs::msg::GeoPose>::SharedPtr geopose_pub_;
