@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <nmea_hardware_interface/geopose_publisher.hpp>
 #include <memory>
+#include <nmea_hardware_interface/geopose_publisher.hpp>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -22,7 +22,6 @@ namespace nmea_hardware_interface
 {
 controller_interface::return_type GeoPosePublisher::init(const std::string & controller_name)
 {
-  
   auto ret = ControllerInterface::init(controller_name);
   if (ret != controller_interface::return_type::OK) {
     return ret;
@@ -39,15 +38,14 @@ controller_interface::return_type GeoPosePublisher::init(const std::string & con
   //node->declare_parameter("publish_rate", 30.0);
   publish_rate_ = node->get_parameter("publish_rate").as_double();
   update_duration_ = 1.0 / publish_rate_;
-  
+
   //node->declare_parameter("qos", "sensor");
   qos_ = node->get_parameter("qos").as_string();
 
   return controller_interface::return_type::OK;
 }
 
-controller_interface::InterfaceConfiguration
-GeoPosePublisher::state_interface_configuration() const
+controller_interface::InterfaceConfiguration GeoPosePublisher::state_interface_configuration() const
 {
   controller_interface::InterfaceConfiguration state_interfaces_config;
   state_interfaces_config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
@@ -80,21 +78,17 @@ GeoPosePublisher::on_configure(const rclcpp_lifecycle::State & /*previous_state*
   size_ = 10;
 
   if (qos_ == "sensor") {
-    geopose_pub_ =
-      node->create_publisher<geographic_msgs::msg::GeoPose>(
-      geopose_topic_,
-      rclcpp::SensorDataQoS());
+    geopose_pub_ = node->create_publisher<geographic_msgs::msg::GeoPoseStamped>(
+      geopose_topic_, rclcpp::SensorDataQoS());
   } else if (qos_ == "system_default") {
-    geopose_pub_ =
-      node->create_publisher<geographic_msgs::msg::GeoPose>(
-      geopose_topic_,
-      rclcpp::SystemDefaultsQoS());
+    geopose_pub_ = node->create_publisher<geographic_msgs::msg::GeoPoseStamped>(
+      geopose_topic_, rclcpp::SystemDefaultsQoS());
   } else {
     throw std::runtime_error("invalid qos setting : " + qos_);
   }
   geopose_pub_realtime_ =
-    std::make_shared<realtime_tools::RealtimePublisher<
-        geographic_msgs::msg::GeoPose>>(geopose_pub_);
+    std::make_shared<realtime_tools::RealtimePublisher<geographic_msgs::msg::GeoPoseStamped>>(
+      geopose_pub_);
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
@@ -111,22 +105,20 @@ controller_interface::return_type GeoPosePublisher::update()
 #else
   const auto now = node->get_clock()->now();
 #endif
-  if(isfirsttime)
-  {
+  if (isfirsttime) {
     next_update_time_ = now.seconds();
     isfirsttime = false;
   }
   if (std::fabs(now.seconds() - next_update_time_) < update_duration_ * 0.5) {
-    std_msgs::msg::Header header;
-    header.frame_id = frame_id_;
+    geopose_.header.stamp = now;
+    geopose_.header.frame_id = frame_id_;
+    geopose_.pose.position.latitude = getValue("nmea_gps", "latitude");
+    geopose_.pose.position.longitude = getValue("nmea_gps", "longitude");
+    geopose_.pose.position.altitude = getValue("nmea_gps", "altitude");
 
-    header.stamp = now;
-    geopose_.position.latitude = getValue("nmea_gps","latitude");
-    geopose_.position.longitude = getValue("nmea_gps","longitude");
-    geopose_.position.altitude = getValue("nmea_gps","altitude");
- 
-    geographic_msgs::msg::GeoPose::SharedPtr geopose_msg = std::make_shared<geographic_msgs::msg::GeoPose>(geopose_);
-    
+    geographic_msgs::msg::GeoPoseStamped::SharedPtr geopose_msg =
+      std::make_shared<geographic_msgs::msg::GeoPoseStamped>(geopose_);
+
     if (geopose_pub_realtime_->trylock()) {
       geopose_pub_realtime_->msg_ = *geopose_msg;
       geopose_pub_realtime_->unlockAndPublish();

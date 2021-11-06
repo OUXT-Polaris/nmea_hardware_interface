@@ -37,13 +37,12 @@
 #include <boost/asio.hpp>
 #include <boost/optional.hpp>
 #include <boost/thread.hpp>
-#include <memory>
-#include <nmea_msgs/msg/sentence.hpp>
 #include <geographic_msgs/msg/geo_point.hpp>
 #include <geographic_msgs/msg/geo_pose.hpp>
 #include <geometry_msgs/msg/quaternion.hpp>
+#include <memory>
+#include <nmea_msgs/msg/sentence.hpp>
 #include <rclcpp/rclcpp.hpp>
-
 #include <string>
 #include <vector>
 
@@ -60,23 +59,22 @@ public:
   RCLCPP_SHARED_PTR_DEFINITIONS(GPSHardwareInterface)
 
 #if GALACTIC
-    
+
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_init(
     const hardware_interface::HardwareInfo & info) override;
 #else
-    
+
   hardware_interface::return_type configure(const hardware_interface::HardwareInfo & info) override;
 #endif
 
   ~GPSHardwareInterface();
-    
+
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
 
 #ifndef GALACTIC
-    
+
   hardware_interface::return_type start() override;
 
-    
   hardware_interface::return_type stop() override;
 #endif
 
@@ -96,7 +94,7 @@ private:
   boost::thread io_thread_;
   void readSentence();
   boost::array<char, 256> buf_;
-  
+
   void connectSerialPort();
   bool connected_ = false;
   void timerCallback();
@@ -104,7 +102,7 @@ private:
   boost::optional<std::string> validate(std::string sentence);
   bool validatecheckSum(std::string sentence);
   std::string getHexString(uint8_t value);
-  
+
   void nmea_to_geopose();
   std::string calculateChecksum(std::string sentence);
   geographic_msgs::msg::GeoPoint geopoint_;

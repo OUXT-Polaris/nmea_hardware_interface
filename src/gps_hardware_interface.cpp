@@ -15,7 +15,6 @@
 #include <chrono>
 #include <memory>
 #include <nmea_hardware_interface/gps_hardware_interface.hpp>
-
 #include <sstream>
 #include <string>
 #include <vector>
@@ -34,18 +33,17 @@ hardware_interface::return_type GPSHardwareInterface::configure(
   baud_rate_ = std::stoi(info.hardware_parameters.at("baud_rate"));
   frame_id_ = info.hardware_parameters.at("frame_id");
   connectSerialPort();
-  
+
   using namespace std::chrono_literals;
-  //timer_ = rclcpp::create_wall_timer(1000ms, std::bind(&GPSHardwareInterface::timerCallback, this));
-  #if GALACTIC
+//timer_ = rclcpp::create_wall_timer(1000ms, std::bind(&GPSHardwareInterface::timerCallback, this));
+#if GALACTIC
   if (
     SensorInterface::on_init(info) !=
     rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS) {
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::ERROR;
   }
 #else
-  if (configure_default(info) != hardware_interface::return_type::OK)
-  {
+  if (configure_default(info) != hardware_interface::return_type::OK) {
     return hardware_interface::return_type::ERROR;
   }
 #endif
@@ -53,7 +51,7 @@ hardware_interface::return_type GPSHardwareInterface::configure(
     throw std::runtime_error("joint size should be 1");
   }
   joint_ = info.joints[0].name;
-  
+
 #if GALACTIC
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 #else
@@ -71,9 +69,12 @@ GPSHardwareInterface::~GPSHardwareInterface()
 std::vector<hardware_interface::StateInterface> GPSHardwareInterface::export_state_interfaces()
 {
   std::vector<hardware_interface::StateInterface> state_interfaces = {};
-  state_interfaces.emplace_back(hardware_interface::StateInterface("nmea_gps", "latitude", &geopose_.position.latitude));
-  state_interfaces.emplace_back(hardware_interface::StateInterface("nmea_gps", "longitude", &geopose_.position.longitude));
-  state_interfaces.emplace_back(hardware_interface::StateInterface("nmea_gps", "altitude", &geopose_.position.altitude));
+  state_interfaces.emplace_back(
+    hardware_interface::StateInterface("nmea_gps", "latitude", &geopose_.position.latitude));
+  state_interfaces.emplace_back(
+    hardware_interface::StateInterface("nmea_gps", "longitude", &geopose_.position.longitude));
+  state_interfaces.emplace_back(
+    hardware_interface::StateInterface("nmea_gps", "altitude", &geopose_.position.altitude));
 
   return state_interfaces;
 }
@@ -82,8 +83,7 @@ std::vector<hardware_interface::StateInterface> GPSHardwareInterface::export_sta
 hardware_interface::return_type GPSHardwareInterface::start()
 {
   status_ = hardware_interface::status::STARTED;
-  togeopose_thread_ = boost::thread(
-    boost::bind(&GPSHardwareInterface::nmea_to_geopose, this));
+  togeopose_thread_ = boost::thread(boost::bind(&GPSHardwareInterface::nmea_to_geopose, this));
   return hardware_interface::return_type::OK;
 }
 
@@ -100,7 +100,6 @@ hardware_interface::return_type GPSHardwareInterface::read()
 {
   return hardware_interface::return_type::OK;
 }
-
 
 bool GPSHardwareInterface::validatecheckSum(std::string sentence)
 {
@@ -173,22 +172,22 @@ void GPSHardwareInterface::connectSerialPort()
 {
   try {
     port_ptr_ = std::make_shared<boost::asio::serial_port>(io_, device_file_);
-   
+
     port_ptr_->set_option(boost::asio::serial_port_base::baud_rate(baud_rate_));
-    
+
     port_ptr_->set_option(boost::asio::serial_port_base::character_size(8));
-   
+
     port_ptr_->set_option(boost::asio::serial_port_base::flow_control(
       boost::asio::serial_port_base ::flow_control::none));
-     
+
     port_ptr_->set_option(
       boost::asio::serial_port_base::parity(boost::asio::serial_port_base::parity::none));
-    
+
     port_ptr_->set_option(
       boost::asio::serial_port_base::stop_bits(boost::asio::serial_port_base::stop_bits::one));
-   
+
     io_thread_ = boost::thread(boost::bind(&GPSHardwareInterface::readSentence, this));
-    
+
     connected_ = true;
   } catch (const std::exception & e) {
     std::cout << e.what() << std::endl;
@@ -204,7 +203,7 @@ void GPSHardwareInterface::timerCallback()
   }
 }
 
-std::vector<std::string> GPSHardwareInterface::split(const std::string &s, char delim)
+std::vector<std::string> GPSHardwareInterface::split(const std::string & s, char delim)
 {
   std::vector<std::string> elems;
   std::stringstream ss(s);
@@ -220,7 +219,6 @@ std::vector<std::string> GPSHardwareInterface::split(const std::string &s, char 
 void GPSHardwareInterface::readSentence()
 {
   while (rclcpp::ok()) {
-    
     buf_ = boost::array<char, 256>();
     try {
       port_ptr_->read_some(boost::asio::buffer(buf_));
@@ -230,7 +228,7 @@ void GPSHardwareInterface::readSentence()
     }
     std::string data(buf_.begin(), buf_.end());
     std::vector<std::string> splited_sentence = split(data, '$');
-    
+
     for (auto itr = splited_sentence.begin(); itr != splited_sentence.end(); itr++) {
       auto line = validate(*itr);
       if (line) {
@@ -245,12 +243,10 @@ void GPSHardwareInterface::readSentence()
 void GPSHardwareInterface::nmea_to_geopose()
 {
   if (isGprmcSentence(sentence_)) {
-    
     geographic_msgs::msg::GeoPoint geopoint;
     boost::optional<std::vector<std::string>> data = splitSentence(sentence_);
-    
+
     if (data) {
-      
       std::string lat_str = data.get()[3];
       std::string north_or_south_str = data.get()[4];
       double latitude = std::stod(lat_str.substr(0, 2)) + std::stod(lat_str.substr(2)) / 60.0;
@@ -300,18 +296,15 @@ std::vector<std::string> GPSHardwareInterface::splitChecksum(std::string str)
 boost::optional<std::vector<std::string>> GPSHardwareInterface::splitSentence(
   nmea_msgs::msg::Sentence sentence)
 {
-  
   std::vector<std::string> data = splitChecksum(sentence.sentence);
-  
+
   if (data.size() != 2) {
-    
     return boost::none;
   }
   if (calculateChecksum(data[0]) == data[1]) {
-    
     return split(data[0], ',');
   }
-  
+
   return boost::none;
 }
 
@@ -346,7 +339,7 @@ std::string GPSHardwareInterface::calculateChecksum(std::string sentence)
   return ret;
 }
 
-}  // namespace nmea_hardware_interface 
+}  // namespace nmea_hardware_interface
 
 #include "pluginlib/class_list_macros.hpp"
 

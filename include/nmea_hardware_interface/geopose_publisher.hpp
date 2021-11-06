@@ -15,21 +15,18 @@
 #ifndef NMEA_HARDWARE_INTERFACE__GEOPOSE_PUBLISHER_HPP_
 #define NMEA_HARDWARE_INTERFACE__GEOPOSE_PUBLISHER_HPP_
 
-
 #include <realtime_tools/realtime_buffer.h>
 #include <realtime_tools/realtime_publisher.h>
 
 #include <controller_interface/controller_interface.hpp>
 #include <diagnostic_msgs/msg/diagnostic_array.hpp>
+#include <geographic_msgs/msg/geo_pose_stamped.hpp>
 #include <geometry_msgs/msg/transform_stamped.hpp>
-
 #include <memory>
+#include <rclcpp/rclcpp.hpp>
 #include <rclcpp/subscription.hpp>
 #include <rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp>
 #include <rclcpp_lifecycle/state.hpp>
-#include <geographic_msgs/msg/geo_pose.hpp>
-#include <rclcpp/rclcpp.hpp>
-
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -39,10 +36,8 @@ namespace nmea_hardware_interface
 class GeoPosePublisher : public controller_interface::ControllerInterface
 {
 public:
-   
   controller_interface::return_type init(const std::string & controller_name) override;
 
-   
   controller_interface::InterfaceConfiguration command_interface_configuration() const override
   {
     return controller_interface::InterfaceConfiguration{
@@ -61,21 +56,18 @@ public:
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_configure(
     const rclcpp_lifecycle::State & /*previous_state*/) override;
 
-   
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_activate(
     const rclcpp_lifecycle::State & /*previous_state*/) override
   {
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
   }
 
-   
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_deactivate(
     const rclcpp_lifecycle::State & /*previous_state*/) override
   {
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
   }
 
-   
 #if GALACTIC
   controller_interface::return_type update(
     const rclcpp::Time & time, const rclcpp::Duration & period) override;
@@ -92,12 +84,13 @@ private:
   std::string qos_;
   bool isfirsttime;
   std::shared_ptr<rclcpp::Clock> clock_ptr_;
-  geographic_msgs::msg::GeoPose geopose_;
+  geographic_msgs::msg::GeoPoseStamped geopose_;
   double getValue(const std::string & joint_name, const std::string & interface_name);
   double configure_time_;
   double next_update_time_;
-  rclcpp::Publisher<geographic_msgs::msg::GeoPose>::SharedPtr geopose_pub_;
-  std::shared_ptr<realtime_tools::RealtimePublisher<geographic_msgs::msg::GeoPose>> geopose_pub_realtime_;
+  rclcpp::Publisher<geographic_msgs::msg::GeoPoseStamped>::SharedPtr geopose_pub_;
+  std::shared_ptr<realtime_tools::RealtimePublisher<geographic_msgs::msg::GeoPoseStamped>>
+    geopose_pub_realtime_;
 };
 }  // namespace nmea_hardware_interface
 
