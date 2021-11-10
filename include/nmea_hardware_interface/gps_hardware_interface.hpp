@@ -15,6 +15,9 @@
 #ifndef NMEA_HARDWARE_INTERFACE__GPS_HARDWARE_INTERFACE_HPP_
 #define NMEA_HARDWARE_INTERFACE__GPS_HARDWARE_INTERFACE_HPP_
 
+// Headers in ROS
+#include <quaternion_operation/quaternion_operation.h>
+
 #if GALACTIC
 #include <hardware_interface/system_interface.hpp>
 #else
@@ -29,10 +32,6 @@
 #else
 #include <hardware_interface/types/hardware_interface_status_values.hpp>
 #endif
-
-// Headers in ROS
-#include <quaternion_operation/quaternion_operation.h>
-
 #include <boost/array.hpp>
 #include <boost/asio.hpp>
 #include <boost/optional.hpp>
@@ -40,9 +39,9 @@
 #include <geographic_msgs/msg/geo_point.hpp>
 #include <geographic_msgs/msg/geo_pose.hpp>
 #include <geometry_msgs/msg/quaternion.hpp>
-#include <memory>
 #include <nmea_msgs/msg/sentence.hpp>
 #include <rclcpp/rclcpp.hpp>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -50,9 +49,9 @@ namespace nmea_hardware_interface
 {
 class GPSHardwareInterface
 #if GALACTIC
-: public hardware_interface::SensorInterface
+  : public hardware_interface::SensorInterface
 #else
-: public hardware_interface::BaseInterface<hardware_interface::SensorInterface>
+  : public hardware_interface::BaseInterface<hardware_interface::SensorInterface>
 #endif
 {
 public:
