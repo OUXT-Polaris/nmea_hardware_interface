@@ -12,13 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <memory>
+#include "nmea_hardware_interface/geopose_publisher.hpp"
 
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
-
-#include "nmea_hardware_interface/geopose_publisher.hpp"
 
 namespace nmea_hardware_interface
 {
@@ -68,7 +67,7 @@ double GeoPosePublisher::getValue(
     }
   }
   throw std::runtime_error(
-          "state interface : " + interface_name + " does not exist in : " + joint_name);
+    "state interface : " + interface_name + " does not exist in : " + joint_name);
 }
 
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
@@ -90,7 +89,7 @@ GeoPosePublisher::on_configure(const rclcpp_lifecycle::State & /*previous_state*
   }
   geopose_pub_realtime_ =
     std::make_shared<realtime_tools::RealtimePublisher<geographic_msgs::msg::GeoPoseStamped>>(
-    geopose_pub_);
+      geopose_pub_);
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 

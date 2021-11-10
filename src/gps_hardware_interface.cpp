@@ -12,14 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "nmea_hardware_interface/gps_hardware_interface.hpp"
+
 #include <chrono>
 #include <memory>
-
 #include <sstream>
 #include <string>
 #include <vector>
-
-#include "nmea_hardware_interface/gps_hardware_interface.hpp"
 
 namespace nmea_hardware_interface
 {
@@ -41,8 +40,7 @@ hardware_interface::return_type GPSHardwareInterface::configure(
 #if GALACTIC
   if (
     SensorInterface::on_init(info) !=
-    rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS)
-  {
+    rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS) {
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::ERROR;
   }
 #else
@@ -125,7 +123,7 @@ bool GPSHardwareInterface::validatecheckSum(std::string sentence)
     return true;
   }
   std::string message = "checksum does not match in calculating sentence :" + sentence +
-    " calculated checksum is " + ret;
+                        " calculated checksum is " + ret;
   return false;
 }
 
@@ -180,9 +178,8 @@ void GPSHardwareInterface::connectSerialPort()
 
     port_ptr_->set_option(boost::asio::serial_port_base::character_size(8));
 
-    port_ptr_->set_option(
-      boost::asio::serial_port_base::flow_control(
-        boost::asio::serial_port_base::flow_control::none));
+    port_ptr_->set_option(boost::asio::serial_port_base::flow_control(
+      boost::asio::serial_port_base::flow_control::none));
 
     port_ptr_->set_option(
       boost::asio::serial_port_base::parity(boost::asio::serial_port_base::parity::none));
