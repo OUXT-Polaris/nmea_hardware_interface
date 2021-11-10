@@ -14,10 +14,12 @@
 
 #include <chrono>
 #include <memory>
-#include <nmea_hardware_interface/gps_hardware_interface.hpp>
+
 #include <sstream>
 #include <string>
 #include <vector>
+
+#include "nmea_hardware_interface/gps_hardware_interface.hpp"
 
 namespace nmea_hardware_interface
 {
@@ -33,13 +35,14 @@ hardware_interface::return_type GPSHardwareInterface::configure(
   baud_rate_ = std::stoi(info.hardware_parameters.at("baud_rate"));
   frame_id_ = info.hardware_parameters.at("frame_id");
   connectSerialPort();
-
   using namespace std::chrono_literals;
-//timer_ = rclcpp::create_wall_timer(1000ms, std::bind(&GPSHardwareInterface::timerCallback, this));
+// timer_ = rclcpp::create_wall_timer(
+//        1000ms, std::bind(&GPSHardwareInterface::timerCallback, this));
 #if GALACTIC
   if (
     SensorInterface::on_init(info) !=
-    rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS) {
+    rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS)
+  {
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::ERROR;
   }
 #else
@@ -122,7 +125,7 @@ bool GPSHardwareInterface::validatecheckSum(std::string sentence)
     return true;
   }
   std::string message = "checksum does not match in calculating sentence :" + sentence +
-                        " calculated checksum is " + ret;
+    " calculated checksum is " + ret;
   return false;
 }
 
@@ -177,8 +180,9 @@ void GPSHardwareInterface::connectSerialPort()
 
     port_ptr_->set_option(boost::asio::serial_port_base::character_size(8));
 
-    port_ptr_->set_option(boost::asio::serial_port_base::flow_control(
-      boost::asio::serial_port_base ::flow_control::none));
+    port_ptr_->set_option(
+      boost::asio::serial_port_base::flow_control(
+        boost::asio::serial_port_base::flow_control::none));
 
     port_ptr_->set_option(
       boost::asio::serial_port_base::parity(boost::asio::serial_port_base::parity::none));

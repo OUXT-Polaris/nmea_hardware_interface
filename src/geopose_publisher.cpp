@@ -13,10 +13,12 @@
 // limitations under the License.
 
 #include <memory>
-#include <nmea_hardware_interface/geopose_publisher.hpp>
+
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+#include "nmea_hardware_interface/geopose_publisher.hpp"
 
 namespace nmea_hardware_interface
 {
@@ -29,17 +31,17 @@ controller_interface::return_type GeoPosePublisher::init(const std::string & con
   auto node = get_node();
   clock_ptr_ = node->get_clock();
 
-  //node->declare_parameter("geopose_topic", "");
+  // node->declare_parameter("geopose_topic", "");
   geopose_topic_ = node->get_parameter("geopose_topic").as_string();
 
-  //node->declare_parameter("frame_id", "");
+  // node->declare_parameter("frame_id", "");
   frame_id_ = node->get_parameter("frame_id").as_string();
 
-  //node->declare_parameter("publish_rate", 30.0);
+  // node->declare_parameter("publish_rate", 30.0);
   publish_rate_ = node->get_parameter("publish_rate").as_double();
   update_duration_ = 1.0 / publish_rate_;
 
-  //node->declare_parameter("qos", "sensor");
+  // node->declare_parameter("qos", "sensor");
   qos_ = node->get_parameter("qos").as_string();
 
   return controller_interface::return_type::OK;
@@ -66,7 +68,7 @@ double GeoPosePublisher::getValue(
     }
   }
   throw std::runtime_error(
-    "state interface : " + interface_name + " does not exist in : " + joint_name);
+          "state interface : " + interface_name + " does not exist in : " + joint_name);
 }
 
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
@@ -88,7 +90,7 @@ GeoPosePublisher::on_configure(const rclcpp_lifecycle::State & /*previous_state*
   }
   geopose_pub_realtime_ =
     std::make_shared<realtime_tools::RealtimePublisher<geographic_msgs::msg::GeoPoseStamped>>(
-      geopose_pub_);
+    geopose_pub_);
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
