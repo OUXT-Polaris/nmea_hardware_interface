@@ -2,8 +2,8 @@
 Changelog for package nmea_hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.1 (2022-01-01)
+------------------
 * Merge pull request `#3 <https://github.com/OUXT-Polaris/nmea_hardware_interface/issues/3>`_ from OUXT-Polaris/feature/future
   clang-format
 * clang-format
