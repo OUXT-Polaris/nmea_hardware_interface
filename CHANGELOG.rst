@@ -2,8 +2,8 @@
 Changelog for package nmea_hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.2 (2022-02-11)
+------------------
 * Merge pull request `#8 <https://github.com/OUXT-Polaris/nmea_hardware_interface/issues/8>`_ from OUXT-Polaris/fix/depends_diagnostic_msgs
   add diagnostic_msgs to the depends
 * remove old repos file
