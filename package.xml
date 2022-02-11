@@ -23,6 +23,7 @@
   <depend>pkg-config</depend>
   <depend>gtk3</depend>
   <depend>boost</depend>
+  <depend>diagnostic_msgs</depend>
 
   <exec_depend>rviz2</exec_depend>
 
