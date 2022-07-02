@@ -22,7 +22,7 @@
 
 namespace nmea_hardware_interface
 {
-#if GALACTIC
+#if defined(GALACTIC) || defined(HUMBLE)
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 GPSHardwareInterface::on_init(const hardware_interface::HardwareInfo & info)
 #else
@@ -37,7 +37,7 @@ hardware_interface::return_type GPSHardwareInterface::configure(
   using namespace std::chrono_literals;
 // timer_ = rclcpp::create_wall_timer(
 //        1000ms, std::bind(&GPSHardwareInterface::timerCallback, this));
-#if GALACTIC
+#if defined(GALACTIC) || defined(HUMBLE)
   if (
     SensorInterface::on_init(info) !=
     rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS) {
@@ -53,7 +53,7 @@ hardware_interface::return_type GPSHardwareInterface::configure(
   }
   joint_ = info.joints[0].name;
 
-#if GALACTIC
+#if defined(GALACTIC) || defined(HUMBLE)
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 #else
   status_ = hardware_interface::status::CONFIGURED;
