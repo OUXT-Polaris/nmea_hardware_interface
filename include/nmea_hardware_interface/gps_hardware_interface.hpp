@@ -70,14 +70,14 @@ public:
 
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
 
-#ifndef GALACTIC
+// #ifndef GALACTIC
 
-  hardware_interface::return_type start() override;
+//   hardware_interface::return_type start() override;
 
-  hardware_interface::return_type stop() override;
-#endif
+//   hardware_interface::return_type stop() override;
+// #endif
 
-  hardware_interface::return_type read() override;
+  hardware_interface::return_type read(const rclcpp::Time & time, const rclcpp::Duration & period) override;
 
 private:
   std::string joint_;
