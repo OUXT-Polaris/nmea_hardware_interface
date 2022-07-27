@@ -21,7 +21,8 @@
 
 namespace nmea_hardware_interface
 {
-controller_interface::return_type GeoPosePublisher::init(const std::string & controller_name)
+controller_interface::return_type GeoPosePublisher::init(const std::string & controller_name, const std::string & namespace_,
+    const rclcpp::NodeOptions & node_options)
 {
   auto ret = ControllerInterface::init(controller_name);
   if (ret != controller_interface::return_type::OK) {
@@ -93,7 +94,7 @@ GeoPosePublisher::on_configure(const rclcpp_lifecycle::State & /*previous_state*
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
-#if GALACTIC
+#if defined(GALACTIC) || defined(HUMBLE)
 controller_interface::return_type GeoPosePublisher::update(
   const rclcpp::Time & time, const rclcpp::Duration &)
 #else
@@ -101,7 +102,7 @@ controller_interface::return_type GeoPosePublisher::update()
 #endif
 {
   auto node = get_node();
-#if GALACTIC
+#if defined(GALACTIC) || defined(HUMBLE)
   const auto now = time;
 #else
   const auto now = node->get_clock()->now();

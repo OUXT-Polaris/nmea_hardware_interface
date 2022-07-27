@@ -18,7 +18,7 @@
 // Headers in ROS
 #include <quaternion_operation/quaternion_operation.h>
 
-#if GALACTIC
+#if defined(GALACTIC) || defined(HUMBLE)
 #include <hardware_interface/system_interface.hpp>
 #else
 #include <hardware_interface/base_interface.hpp>
@@ -27,7 +27,7 @@
 #include <hardware_interface/hardware_info.hpp>
 #include <hardware_interface/sensor_interface.hpp>
 #include <hardware_interface/types/hardware_interface_return_values.hpp>
-#if GALACTIC
+#if defined(GALACTIC) || defined(HUMBLE)
 #include <hardware_interface/types/hardware_interface_type_values.hpp>
 #else
 #include <hardware_interface/types/hardware_interface_status_values.hpp>
@@ -48,7 +48,7 @@
 namespace nmea_hardware_interface
 {
 class GPSHardwareInterface
-#if GALACTIC
+#if defined(GALACTIC) || defined(HUMBLE)
 : public hardware_interface::SensorInterface
 #else
 : public hardware_interface::BaseInterface<hardware_interface::SensorInterface>
@@ -57,7 +57,7 @@ class GPSHardwareInterface
 public:
   RCLCPP_SHARED_PTR_DEFINITIONS(GPSHardwareInterface)
 
-#if GALACTIC
+#if defined(GALACTIC) || defined(HUMBLE)
 
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_init(
     const hardware_interface::HardwareInfo & info) override;
@@ -70,14 +70,14 @@ public:
 
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
 
-#ifndef GALACTIC
+// #ifndef GALACTIC
 
-  hardware_interface::return_type start() override;
+//   hardware_interface::return_type start() override;
 
-  hardware_interface::return_type stop() override;
-#endif
+//   hardware_interface::return_type stop() override;
+// #endif
 
-  hardware_interface::return_type read() override;
+  hardware_interface::return_type read(const rclcpp::Time & time, const rclcpp::Duration & period) override;
 
 private:
   std::string joint_;
