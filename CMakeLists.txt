@@ -15,6 +15,10 @@ if($ENV{ROS_DISTRO} STREQUAL "galactic")
   add_definitions(-DGALACTIC)
 endif()
 
+if($ENV{ROS_DISTRO} STREQUAL "humble")
+  add_definitions(-DHUMBLE)
+endif()
+
 # find dependencies
 
 find_package(ament_cmake REQUIRED)
@@ -28,6 +32,7 @@ find_package(quaternion_operation REQUIRED)
 find_package(controller_interface REQUIRED)
 find_package(geographic_msgs REQUIRED)
 find_package(nmea_msgs REQUIRED)
+find_package(diagnostic_msgs REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system thread)
 
 add_library(nmea_hardware_interface SHARED
@@ -57,6 +62,7 @@ ament_target_dependencies(nmea_hardware_interface
   geographic_msgs
   quaternion_operation
   nmea_msgs
+  diagnostic_msgs
 )
 pluginlib_export_plugin_description_file(hardware_interface nmea_hardware_interface.xml)
 
@@ -78,6 +84,7 @@ ament_target_dependencies(nmea_controller_interface
   ros2_control
   realtime_tools
   geographic_msgs
+  diagnostic_msgs
 )
 pluginlib_export_plugin_description_file(controller_interface nmea_controller_interface.xml)
 
@@ -93,6 +100,7 @@ ament_export_dependencies(
   quaternion_operation
   geographic_msgs
   nmea_msgs
+  diagnostic_msgs
 )
 
 install(
