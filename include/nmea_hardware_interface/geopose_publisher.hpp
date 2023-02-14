@@ -36,7 +36,8 @@ namespace nmea_hardware_interface
 class GeoPosePublisher : public controller_interface::ControllerInterface
 {
 public:
-  controller_interface::return_type init(const std::string & controller_name, const std::string & namespace_ = "",
+  controller_interface::return_type init(
+    const std::string & controller_name, const std::string & namespace_ = "",
     const rclcpp::NodeOptions & node_options =
       rclcpp::NodeOptions()
         .allow_undeclared_parameters(true)

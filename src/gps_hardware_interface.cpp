@@ -97,7 +97,8 @@ std::vector<hardware_interface::StateInterface> GPSHardwareInterface::export_sta
 // }
 // #endif
 
-hardware_interface::return_type GPSHardwareInterface::read(const rclcpp::Time & time, const rclcpp::Duration & period)
+hardware_interface::return_type GPSHardwareInterface::read(
+  const rclcpp::Time & time, const rclcpp::Duration & period)
 {
   return hardware_interface::return_type::OK;
 }
