@@ -18,20 +18,12 @@
 // Headers in ROS
 #include <quaternion_operation/quaternion_operation.h>
 
-#if defined(GALACTIC) || defined(HUMBLE)
 #include <hardware_interface/system_interface.hpp>
-#else
-#include <hardware_interface/base_interface.hpp>
-#endif
 #include <hardware_interface/handle.hpp>
 #include <hardware_interface/hardware_info.hpp>
 #include <hardware_interface/sensor_interface.hpp>
 #include <hardware_interface/types/hardware_interface_return_values.hpp>
-#if defined(GALACTIC) || defined(HUMBLE)
 #include <hardware_interface/types/hardware_interface_type_values.hpp>
-#else
-#include <hardware_interface/types/hardware_interface_status_values.hpp>
-#endif
 #include <boost/array.hpp>
 #include <boost/asio.hpp>
 #include <boost/optional.hpp>
@@ -48,34 +40,17 @@
 namespace nmea_hardware_interface
 {
 class GPSHardwareInterface
-#if defined(GALACTIC) || defined(HUMBLE)
 : public hardware_interface::SensorInterface
-#else
-: public hardware_interface::BaseInterface<hardware_interface::SensorInterface>
-#endif
 {
 public:
   RCLCPP_SHARED_PTR_DEFINITIONS(GPSHardwareInterface)
 
-#if defined(GALACTIC) || defined(HUMBLE)
-
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_init(
     const hardware_interface::HardwareInfo & info) override;
-#else
-
-  hardware_interface::return_type configure(const hardware_interface::HardwareInfo & info) override;
-#endif
 
   ~GPSHardwareInterface();
 
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
-
-  // #ifndef GALACTIC
-
-  //   hardware_interface::return_type start() override;
-
-  //   hardware_interface::return_type stop() override;
-  // #endif
 
   hardware_interface::return_type read(
     const rclcpp::Time & time, const rclcpp::Duration & period) override;
