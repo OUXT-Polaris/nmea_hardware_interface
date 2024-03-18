@@ -25,7 +25,7 @@ controller_interface::return_type GeoPosePublisher::init(
   const std::string & controller_name, const std::string & namespace_,
   const rclcpp::NodeOptions & node_options)
 {
-  auto ret = ControllerInterface::init(controller_name);
+  auto ret = ControllerInterface::init(controller_name, "", 0.0, namespace_, node_options);
   if (ret != controller_interface::return_type::OK) {
     return ret;
   }
@@ -95,19 +95,11 @@ GeoPosePublisher::on_configure(const rclcpp_lifecycle::State & /*previous_state*
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
-#if defined(GALACTIC) || defined(HUMBLE)
 controller_interface::return_type GeoPosePublisher::update(
   const rclcpp::Time & time, const rclcpp::Duration &)
-#else
-controller_interface::return_type GeoPosePublisher::update()
-#endif
 {
   auto node = get_node();
-#if defined(GALACTIC) || defined(HUMBLE)
   const auto now = time;
-#else
-  const auto now = node->get_clock()->now();
-#endif
   if (isfirsttime) {
     next_update_time_ = now.seconds();
     isfirsttime = false;

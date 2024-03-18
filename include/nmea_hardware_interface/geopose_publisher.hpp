@@ -41,7 +41,7 @@ public:
     const rclcpp::NodeOptions & node_options =
       rclcpp::NodeOptions()
         .allow_undeclared_parameters(true)
-        .automatically_declare_parameters_from_overrides(true)) override;
+        .automatically_declare_parameters_from_overrides(true));
 
   controller_interface::InterfaceConfiguration command_interface_configuration() const override
   {
@@ -51,12 +51,10 @@ public:
 
   controller_interface::InterfaceConfiguration state_interface_configuration() const override;
 
-#if defined(GALACTIC) || defined(HUMBLE)
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_init()
   {
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
   }
-#endif
 
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_configure(
     const rclcpp_lifecycle::State & /*previous_state*/) override;
@@ -73,12 +71,8 @@ public:
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
   }
 
-#if defined(GALACTIC) || defined(HUMBLE)
   controller_interface::return_type update(
     const rclcpp::Time & time, const rclcpp::Duration & period) override;
-#else
-  controller_interface::return_type update() override;
-#endif
 
 private:
   double publish_rate_;
