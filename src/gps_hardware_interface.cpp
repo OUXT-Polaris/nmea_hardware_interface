@@ -22,43 +22,25 @@
 
 namespace nmea_hardware_interface
 {
-#if defined(GALACTIC) || defined(HUMBLE)
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 GPSHardwareInterface::on_init(const hardware_interface::HardwareInfo & info)
-#else
-hardware_interface::return_type GPSHardwareInterface::configure(
-  const hardware_interface::HardwareInfo & info)
-#endif
 {
   device_file_ = info.hardware_parameters.at("device_file");
   baud_rate_ = std::stoi(info.hardware_parameters.at("baud_rate"));
   frame_id_ = info.hardware_parameters.at("frame_id");
   connectSerialPort();
   using namespace std::chrono_literals;
-// timer_ = rclcpp::create_wall_timer(
-//        1000ms, std::bind(&GPSHardwareInterface::timerCallback, this));
-#if defined(GALACTIC) || defined(HUMBLE)
   if (
     SensorInterface::on_init(info) !=
     rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS) {
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::ERROR;
   }
-#else
-  if (configure_default(info) != hardware_interface::return_type::OK) {
-    return hardware_interface::return_type::ERROR;
-  }
-#endif
   if (info.joints.size() != 1) {
     throw std::runtime_error("joint size should be 1");
   }
   joint_ = info.joints[0].name;
 
-#if defined(GALACTIC) || defined(HUMBLE)
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
-#else
-  status_ = hardware_interface::status::CONFIGURED;
-  return hardware_interface::return_type::OK;
-#endif
 }
 
 GPSHardwareInterface::~GPSHardwareInterface()
@@ -79,23 +61,6 @@ std::vector<hardware_interface::StateInterface> GPSHardwareInterface::export_sta
 
   return state_interfaces;
 }
-
-// #ifndef GALACTIC
-// hardware_interface::return_type GPSHardwareInterface::start()
-// {
-//   status_ = hardware_interface::status::STARTED;
-//   togeopose_thread_ = boost::thread(boost::bind(&GPSHardwareInterface::nmea_to_geopose, this));
-//   return hardware_interface::return_type::OK;
-// }
-
-// hardware_interface::return_type GPSHardwareInterface::stop()
-// {
-//   io_thread_.join();
-//   togeopose_thread_.join();
-//   status_ = hardware_interface::status::STOPPED;
-//   return hardware_interface::return_type::OK;
-// }
-// #endif
 
 hardware_interface::return_type GPSHardwareInterface::read(
   const rclcpp::Time & time, const rclcpp::Duration & period)
